@@ -29,7 +29,7 @@ IDs from `requirements.md` / `SECURITY_SPEC.md` are reused where the criterion i
 - **REQ-IN-03** Reject a PDF with fewer than 200 extractable characters with "This looks like a scanned image; upload a text-based PDF or DOCX".
 - **REQ-IN-04** Show the extracted text. The visitor can edit it and must confirm it before analysis (enforced in the page and on the server).
 - **REQ-IN-05** *(partial)* Exclude hidden text and warn, quoting it. Covered today: DOCX hidden runs, white text and text under 4 pt; PDF text under 4 pt. PDF text positioned off-page is excluded (the PDF library drops it), but it can't be quoted in the warning. **Not yet:** PDF text coloured like the background.
-- **REQ-IN-06** *(narrowed)* Accept the job description as pasted text of at most 20,000 characters. JD file upload is deferred.
+- **REQ-IN-06** Accept the job description as pasted text of at most 20,000 characters, or as a PDF/DOCX file (built in HW3 as US-IN-2; see `requirements.md` "Scope for HW3").
 - **REQ-IN-07** Block analysis if the job description is under 300 characters after trimming.
 - **REQ-S1-01** Block analysis if the confirmed resume text is over 50,000 characters (keeps input under the SEC-LLM-09 token cap).
 

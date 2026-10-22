@@ -1,8 +1,14 @@
 # Resume Keyword Check
 
-Upload a resume (PDF or Word), paste a job description, and get **Step 1: ATS & Keyword Gap Analysis**: the job's keywords your resume is missing, and your three weakest bullet points.
+Upload a resume (PDF or Word), paste or upload a job description (PDF or Word), and get **Step 1: ATS & Keyword Gap Analysis**: the job's keywords your resume is missing, and your three weakest bullet points.
 
 This is the first slice of the Resume & LinkedIn Optimizer. What it does and doesn't do is in [docs/STORY_1.md](docs/STORY_1.md). The full product spec is in [docs/](docs/).
+
+## Non-goals (HW3 build rules)
+
+- **No real payments.** There is no billing or card handling; Stripe (US-BILL-*) is out of scope.
+- **No real authentication.** There are no accounts or sign-in; any visitor can use the app (US-AUTH-* is out of scope).
+- **No database.** Nothing is stored. The only server state is the in-memory rate-limit and daily-cap counters, which reset on every deploy and whenever Vercel starts a new instance.
 
 ## Run it on your Mac
 

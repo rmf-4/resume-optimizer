@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 function mockExtract(body: object, status = 200) {
-  const fn = vi.fn(async (_url: string, _init?: RequestInit) => new Response(JSON.stringify(body), { status }));
+  const fn = vi.fn(async (...args: [string, RequestInit?]) => (void args, new Response(JSON.stringify(body), { status })));
   vi.stubGlobal("fetch", fn);
   return fn;
 }

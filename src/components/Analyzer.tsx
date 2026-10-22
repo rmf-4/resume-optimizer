@@ -36,6 +36,9 @@ export default function Analyzer({ demoMode }: { demoMode: boolean }) {
   const [hiddenText, setHiddenText] = useState<string[]>([]);
   const [confirmed, setConfirmed] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
+  const [jdUploading, setJdUploading] = useState(false);
+  const [jdUploadError, setJdUploadError] = useState<string | null>(null);
+  const [jdHiddenText, setJdHiddenText] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [report, setReport] = useState<Step1Report | null>(null);
@@ -77,6 +80,36 @@ export default function Analyzer({ demoMode }: { demoMode: boolean }) {
       setUploadError("Upload failed. Check your connection and try again.");
     } finally {
       setUploading(false);
+    }
+  }
+
+  // US-IN-2: a job-description file fills the box with its text. On any rejection the box is left as it was.
+  async function onJdFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setJdUploadError(null);
+    setJdHiddenText([]);
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setJdUploadError("This file is larger than 5 MB. Please upload a smaller file.");
+      return;
+    }
+    setJdUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("purpose", "job_description");
+      const res = await fetch("/api/extract", { method: "POST", body: form });
+      const body = await readJson(res);
+      if (!res.ok || !body) {
+        setJdUploadError(errorFrom(res, body, "We couldn't read this file. Please try again."));
+        return;
+      }
+      setJobDescription(String(body.text ?? ""));
+      setJdHiddenText(Array.isArray(body.hiddenText) ? body.hiddenText.map(String) : []);
+    } catch {
+      setJdUploadError("Upload failed. Check your connection and try again.");
+    } finally {
+      setJdUploading(false);
     }
   }
 
@@ -179,7 +212,7 @@ export default function Analyzer({ demoMode }: { demoMode: boolean }) {
       )}
 
       <section className={styles.card}>
-        <h2>3. Paste the job description</h2>
+        <h2>3. Add the job description</h2>
         <label className={styles.label} htmlFor="job-description">
           Job description
         </label>
@@ -196,6 +229,36 @@ export default function Analyzer({ demoMode }: { demoMode: boolean }) {
           {jdLength.toLocaleString("en-US")} / {MAX_JD_CHARS.toLocaleString("en-US")} characters
           {jdLength < MIN_JD_CHARS && " (at least 300 characters needed)"}
         </p>
+        <label className={styles.label} htmlFor="jd-file">
+          Or upload the posting (PDF or DOCX, up to 5 MB)
+        </label>
+        <input
+          id="jd-file"
+          className={styles.file}
+          type="file"
+          accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          onChange={onJdFileChange}
+          disabled={jdUploading}
+        />
+        {jdUploading && <p className={styles.status}>Reading the job description…</p>}
+        {jdUploadError && (
+          <p className={styles.error} role="alert">
+            {jdUploadError}
+          </p>
+        )}
+        {jdHiddenText.length > 0 && (
+          <div className={styles.warning} role="alert">
+            <p>
+              <strong>Hidden text was removed from the job description.</strong> It was invisible on the page (white, tiny or
+              hidden), so it won&apos;t be analysed:
+            </p>
+            <ul>
+              {jdHiddenText.map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
 
       <div className={styles.actions}>

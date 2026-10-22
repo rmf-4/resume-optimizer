@@ -1,4 +1,4 @@
-import { extractResume, UploadError } from "@/lib/extract";
+import { extractJobDescription, extractResume, UploadError } from "@/lib/extract";
 import { MAX_UPLOAD_BYTES, UPLOADS_PER_HOUR_PER_VISITOR } from "@/lib/limits";
 import { RateLimiter } from "@/lib/rateLimit";
 import { clientIp, errorResponse, FORBIDDEN_MESSAGE, json, originAllowed } from "./http";
@@ -23,10 +23,18 @@ export function createExtractHandler(deps: { limiter: RateLimiter }) {
     }
 
     let file: FormDataEntryValue | null;
+    let purpose: FormDataEntryValue | null;
     try {
-      file = (await req.formData()).get("file");
+      const form = await req.formData();
+      file = form.get("file");
+      purpose = form.get("purpose") ?? "resume";
     } catch {
       file = null;
+      purpose = "resume";
+    }
+    // US-IN-2: the same endpoint reads a job-description file when purpose is "job_description".
+    if (purpose !== "resume" && purpose !== "job_description") {
+      return errorResponse(400, "bad_request", "The request could not be read.");
     }
     if (!(file instanceof File) || file.size === 0) {
       const e = new UploadError("no_file");
@@ -35,8 +43,9 @@ export function createExtractHandler(deps: { limiter: RateLimiter }) {
 
     try {
       // The file is read into memory, parsed, and dropped. Nothing is written to disk or stored.
-      const result = await extractResume(new Uint8Array(await file.arrayBuffer()));
-      return json(result);
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const result = purpose === "job_description" ? await extractJobDescription(bytes) : await extractResume(bytes);
+      return json({ purpose, ...result });
     } catch (e) {
       if (e instanceof UploadError) return errorResponse(e.code === "no_file" ? 400 : 422, e.code, e.message);
       // Log the error type only: messages from parsers can contain document text (SEC-DATA-03).
