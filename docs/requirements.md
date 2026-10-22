@@ -223,3 +223,23 @@ Each of these was **decided by me, not by you**. "Default Qn" means you accepted
 | A-36 | **A deliberate deviation from the prompt.** The prompt says to integrate the missing keywords "seamlessly". I only integrate keywords that the inputs give evidence for. The rest go to "Gaps to discuss with client". | Default Q7 ("preserve factual accuracy") | Without this, the product fabricates skills. |
 | A-37 | The report adds two sub-sections beyond the prompt's format: "Gaps to discuss with client" and "Unverified items". | Follows from A-36 and Q7 | — |
 | A-38 – A-41 | Security thresholds (lockout, sandbox limits, disposable-email blocklist, CVE patch SLA). | Inferred | See the end of `SECURITY_SPEC.md`. |
+
+---
+
+## Scope for HW3
+
+- Build story US-IN-2: supply the target job description (REQ-IN-06 in full: pasted text **or** a PDF/DOCX file under the REQ-IN-01 and REQ-IN-02 rules, plus REQ-IN-07 for file text).
+- No real payments. Where the spec says to charge a card, use a
+  "Simulated payment" button and list real payments as a non-goal in
+  the README.
+- No sign-in provider. Where the spec needs a signed-in user, use a
+  name typed into a text box and list real authentication as a
+  non-goal.
+- No database. Keep data in memory on the server and say in the README
+  that it resets on every deploy.
+
+Decisions agreed before the build (2026-10-22):
+
+- **REQ-IN-06a** If the text extracted from a job-description file is longer than 20,000 characters after trimming, then the system shall reject the file with a reason and shall not truncate it.
+- **REQ-IN-07a** If the text extracted from a job-description file is under 300 characters after trimming, then the system shall reject the file at upload with the REQ-IN-07 message.
+- **REQ-IN-05a** When a job-description file is uploaded, the system shall exclude hidden text and warn, quoting it, using the same rules as REQ-IN-05 for resumes.

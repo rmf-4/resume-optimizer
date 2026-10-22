@@ -201,10 +201,18 @@ export function makeManyEntriesDocx(count = 1001): Uint8Array {
 }
 
 /** Builds the multipart request a browser sends when uploading `bytes` under `filename`. */
-export function uploadRequest(bytes: Uint8Array, filename: string, opts: { type?: string; origin?: string } = {}): Request {
+export function uploadRequest(
+  bytes: Uint8Array,
+  filename: string,
+  opts: { type?: string; origin?: string; purpose?: string } = {},
+): Request {
   const form = new FormData();
   form.append("file", new File([new Uint8Array(bytes)], filename, { type: opts.type ?? "application/octet-stream" }));
+  if (opts.purpose) form.append("purpose", opts.purpose);
   const headers: Record<string, string> = { host: "localhost:3000" };
   if (opts.origin) headers.origin = opts.origin;
   return new Request("http://localhost:3000/api/extract", { method: "POST", body: form, headers });
 }
+
+/** The sample job description as DOCX paragraphs, one per line. */
+export const JOB_DESCRIPTION_LINES = JOB_DESCRIPTION.split("\n").filter((l) => l.trim() !== "");
