@@ -1,0 +1,16 @@
+Senior Operations Analyst - Supply Chain
+
+We are looking for a Senior Operations Analyst to join our supply chain team. You will own demand forecasting, build dashboards in Tableau and Power BI, and write SQL queries against our data warehouse to find savings.
+
+Responsibilities:
+- Lead demand forecasting and inventory optimization across 12 distribution centers.
+- Build and maintain Tableau dashboards and SQL data pipelines for leadership.
+- Partner with procurement on vendor management and contract negotiation.
+- Drive continuous improvement projects using Lean Six Sigma methods.
+- Communicate insights to stakeholders with clear data storytelling.
+
+Requirements:
+- 4+ years in supply chain analytics or operations.
+- Advanced SQL and Excel; Python is a plus.
+- Experience with ERP systems such as SAP.
+- Strong stakeholder management and cross-functional collaboration skills.
