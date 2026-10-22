@@ -1,7 +1,10 @@
-/** Rejects cross-site POSTs (SEC-SESS-04): if the browser sent an Origin, it must match this site. */
+/**
+ * Rejects cross-site POSTs (SEC-SESS-04): the Origin header must be present and match this site.
+ * Browsers send Origin on every POST, so a POST without one did not come from this site's page.
+ */
 export function originAllowed(req: Request): boolean {
   const origin = req.headers.get("origin");
-  if (!origin) return true;
+  if (!origin) return false;
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
   try {
     return new URL(origin).host === host;

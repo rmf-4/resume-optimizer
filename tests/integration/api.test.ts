@@ -47,7 +47,13 @@ function makeHandler(opts: { model?: Step1Model; hourly?: number; daily?: number
 function analyzeRequest(body: unknown, headers: Record<string, string> = {}): Request {
   return new Request("http://localhost:3000/api/analyze", {
     method: "POST",
-    headers: { "content-type": "application/json", host: "localhost:3000", "x-forwarded-for": "203.0.113.7", ...headers },
+    headers: {
+      "content-type": "application/json",
+      host: "localhost:3000",
+      origin: "http://localhost:3000",
+      "x-forwarded-for": "203.0.113.7",
+      ...headers,
+    },
     body: JSON.stringify(body),
   });
 }
@@ -83,7 +89,7 @@ describe("POST /api/extract", () => {
   });
 
   it("test_extract_without_file_is_rejected", async () => {
-    const req = new Request("http://localhost:3000/api/extract", { method: "POST", body: new FormData(), headers: { host: "localhost:3000" } });
+    const req = new Request("http://localhost:3000/api/extract", { method: "POST", body: new FormData(), headers: { host: "localhost:3000", origin: "http://localhost:3000" } });
     const res = await handleExtract(req);
     expect(res.status).toBe(400);
     expect((await res.json()).error.code).toBe("no_file");

@@ -209,8 +209,8 @@ export function uploadRequest(
   const form = new FormData();
   form.append("file", new File([new Uint8Array(bytes)], filename, { type: opts.type ?? "application/octet-stream" }));
   if (opts.purpose) form.append("purpose", opts.purpose);
-  const headers: Record<string, string> = { host: "localhost:3000" };
-  if (opts.origin) headers.origin = opts.origin;
+  // Browsers send Origin on every POST (SEC-SESS-04); default to this site's own origin.
+  const headers: Record<string, string> = { host: "localhost:3000", origin: opts.origin ?? "http://localhost:3000" };
   return new Request("http://localhost:3000/api/extract", { method: "POST", body: form, headers });
 }
 
