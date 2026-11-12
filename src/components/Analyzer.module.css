@@ -14,9 +14,10 @@
 }
 
 .header h1 {
-  margin: 0 0 8px;
-  font-size: 1.9rem;
-  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .lead {
@@ -36,10 +37,11 @@
 
 .card {
   margin: 0 0 20px;
-  padding: 20px;
+  padding: 24px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.04);
 }
 
 .card h2 {
@@ -54,7 +56,7 @@
 
 .label {
   display: block;
-  margin-bottom: 6px;
+  margin: 16px 0 6px;
   font-weight: 600;
 }
 
@@ -118,8 +120,12 @@
   cursor: pointer;
 }
 
+.button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
 .button:disabled {
-  background: var(--disabled);
+  opacity: 0.45;
   cursor: not-allowed;
 }
 

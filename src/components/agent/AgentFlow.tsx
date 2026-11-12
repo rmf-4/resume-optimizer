@@ -93,9 +93,14 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [hiddenText, setHiddenText] = useState<string[]>([]);
 
+  const [dragging, setDragging] = useState(false);
   async function onResumeFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) await handleResumeFile(file);
+    e.target.value = "";
+  }
+
+  async function handleResumeFile(file: File) {
     setUploadError(null);
     setUploading(true);
     const out = await uploadFile(file);
@@ -231,10 +236,11 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
   return (
     <main className={base.main}>
       <header className={base.header}>
-        <h1>Application Prep Agent</h1>
+        <p className={styles.brand}>Application Prep Agent</p>
+        <h1>Turn the resume you have into the one each job needs.</h1>
         <p className={base.lead}>
           Start with the resume you have. The agent asks what it needs to know, builds a stronger version using only what&apos;s true, then
-          checks each job you&apos;re looking at and tailors your resume to the ones worth applying to. Nothing is stored on our server.
+          checks each job you&apos;re looking at and tailors your resume to the ones worth applying to.
         </p>
       </header>
 
@@ -244,42 +250,68 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
         </p>
       )}
 
-      <nav className={styles.stepper} aria-label="Steps">
-        {STEPS.map((label, i) => (
-          <button
-            key={label}
-            type="button"
-            className={`${styles.stepButton} ${step === i ? styles.stepOn : ""}`}
-            disabled={!reachable(i)}
-            aria-current={step === i ? "step" : undefined}
-            onClick={() => setStep(i)}
-          >
-            <span className={styles.stepNumber}>{i + 1}</span>
-            {label}
-          </button>
-        ))}
+      <nav aria-label="Steps">
+        <ol className={styles.progress}>
+          {STEPS.map((label, i) => {
+            const done = i < step && reachable(i);
+            return (
+              <li key={label} className={styles.progressItem}>
+                <button
+                  type="button"
+                  className={`${styles.progressStep} ${step === i ? styles.progressCurrent : ""} ${done ? styles.progressDone : ""}`}
+                  disabled={!reachable(i)}
+                  aria-current={step === i ? "step" : undefined}
+                  onClick={() => setStep(i)}
+                >
+                  <span className={styles.progressDot} aria-hidden="true">
+                    {done ? "✓" : i + 1}
+                  </span>
+                  <span className={styles.progressLabel}>{label}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
       </nav>
 
       {step === 0 && (
         <section className={base.card}>
-          <h2>1. Your resume</h2>
-          <p className={base.hint}>Upload the resume you have now, even if it needs work. It&apos;s remembered in this browser only.</p>
-          <div className={styles.row}>
+          <p className={styles.eyebrow}>Step 1 of 6</p>
+          <h2>Your resume</h2>
+          <p className={base.hint}>Start with the resume you have now, even if it needs work. It stays in this browser.</p>
+          <label
+            className={`${styles.dropzone} ${dragging ? styles.dropzoneOn : ""}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file) void handleResumeFile(file);
+            }}
+          >
+            <input
+              id="flow-resume-file"
+              className={styles.visuallyHidden}
+              type="file"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={onResumeFile}
+              disabled={uploading}
+            />
+            <span className={styles.dropzoneTitle}>{resumeText === null ? "Drop your resume here" : "Drop a different resume here"}</span>
+            <span className={base.hint}>or click to choose a PDF or Word file, up to 5 MB</span>
+          </label>
+          <div className={styles.divider}>
+            <span>or</span>
+          </div>
+          <div className={styles.rowCenter}>
             <button type="button" className={styles.secondary} onClick={loadSample}>
-              Use a made-up sample instead
+              Try it with a made-up sample
             </button>
           </div>
-          <label className={base.label} htmlFor="flow-resume-file">
-            Resume file (PDF or DOCX, up to 5 MB)
-          </label>
-          <input
-            id="flow-resume-file"
-            className={base.file}
-            type="file"
-            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            onChange={onResumeFile}
-            disabled={uploading}
-          />
           {uploading && <p className={base.status}>Reading your file…</p>}
           {uploadError && (
             <p className={base.error} role="alert">
@@ -336,7 +368,8 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
 
       {step === 1 && (
         <section className={base.card}>
-          <h2>2. What your AI knows about you</h2>
+          <p className={styles.eyebrow}>Step 2 of 6</p>
+          <h2>What your AI knows about you</h2>
           <p className={base.hint}>
             ChatGPT, Claude and other assistants that remember your conversations often know projects your resume leaves out. Copy this prompt
             into yours, read its answer, then paste it below. Skip this step if you like.
@@ -365,7 +398,8 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
 
       {step === 2 && (
         <section className={base.card}>
-          <h2>3. Questions before anything changes</h2>
+          <p className={styles.eyebrow}>Step 3 of 6</p>
+          <h2>Questions before anything changes</h2>
           <p className={base.hint}>
             The agent reads your resume and notes and asks what it needs to know to make them stronger: what you did, what a phrase means, the
             numbers. Your answers become facts it can use. Skip any you can&apos;t answer.
@@ -427,7 +461,8 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
 
       {step === 3 && (
         <section className={base.card}>
-          <h2>4. Your stronger resume</h2>
+          <p className={styles.eyebrow}>Step 4 of 6</p>
+          <h2>Your stronger resume</h2>
           <p className={base.hint}>
             Built from your resume, notes and answers, for no particular job yet. Every line is checked against those facts; anything unsupported is
             thrown out. Review it, then use it as the base for every job.
@@ -547,7 +582,8 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
 
       {step === 4 && (
         <section className={base.card}>
-          <h2>5. Jobs you&apos;re looking at</h2>
+          <p className={styles.eyebrow}>Step 5 of 6</p>
+          <h2>Jobs you&apos;re looking at</h2>
           <p className={base.hint}>
             Add up to {MAX_JOBS} jobs. Paste a link from Greenhouse, Lever, Ashby or SmartRecruiters, or paste the posting text. The agent tells you
             which are worth applying to, and why.
@@ -682,7 +718,8 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
             />
           ) : (
             <section className={base.card}>
-              <h2>6. Tailor and export</h2>
+              <p className={styles.eyebrow}>Step 6 of 6</p>
+          <h2>Tailor and export</h2>
               <p className={base.hint}>Check your jobs in step 5 first. Each one you open here gets its own tailored resume to download.</p>
               <div className={styles.row}>
                 <button type="button" className={styles.secondary} onClick={() => setStep(4)}>
