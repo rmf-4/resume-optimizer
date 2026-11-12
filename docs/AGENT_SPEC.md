@@ -251,6 +251,8 @@ At least 23 locked cases, each a resume, a posting and an expected answer:
 4. Run each case 3 times, because the model varies. Score every run at both levels: level 2 from the packet as prepared, and level 3 by applying its stop-or-submit rule (REQ-AG-31) to that same packet. Level 3 runs the same decide and tailor steps, so a separate level 3 run would only repeat them.
 5. Log every change made between runs and report both sets of results.
 6. Save failures word for word in `eval/results/`.
+
+The runner (`npm run eval`, see `eval/README.md`) implements these rules. Two choices it makes that the rules don't spell out: sparse-resume and fabrication-bait cases are tailored even when not marked apply, because their expected behaviour is about the resume; and for full-form cases, the form's own questions in `case.json` count as person-only questions when scoring level 3.
 7. Use real public postings saved as files. Use the team's own resumes or synthetic ones, with fake contact details in anything committed.
 
 ### Browser agent test (Muse and one other)

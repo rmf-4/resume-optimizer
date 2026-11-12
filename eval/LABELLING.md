@@ -1,6 +1,6 @@
 # Labelling the locked cases
 
-Two teammates label every case in `cases/locked/` on their own. These labels are the expected answers for C1 to C9 in `docs/AGENT_SPEC.md` §5, so they have to be fixed and committed **before the first locked run** (baseline run: November 19).
+Two teammates label every case in `cases/locked/` on their own. These labels are the expected answers for C1 to C9 in `docs/AGENT_SPEC.md` §5, so they have to be fixed and committed **before the first locked run** (baseline run: November 18).
 
 Read first:
 
@@ -16,6 +16,20 @@ Read first:
 3. **Judge from the texts.** For each case, read `posting.txt`, the resume named in `case.json`, and `notes.txt` if there is one. The folder name, `category` and `designer_intent` say what the case was built to test. They are not the answer. A case built as "borderline" can be a clear apply or skip in your judgment, and a "strong match" can turn out weaker than intended. Label what you see.
 4. **Person-only items don't count toward coverage.** Work authorization, sponsorship, salary, relocation or location, background checks, willingness to travel and similar items are person-only (REQ-AG-06). Some items could go either way (a driver's licence, a GPA). If you're unsure whether an item is person-only or a credential, say how you treated it in `notes`.
 5. **Trap cases** (`injection`, `hidden_text`, `scam`, plus `modified: true` in `case.json`): `modification` says exactly what was inserted. Label the decision you expect from the spec, and say what the agent must not do.
+
+## The easy way: workbooks
+
+`labels/workbooks/` has one Excel workbook per labeller (`Labelling-Workbook-Labeller-A.xlsx` and `-B.xlsx`). They open in Excel, Google Sheets or Numbers, so nobody needs GitHub. Each case has its own tab with the posting, the resume, any coach notes, what the team changed in trap cases, and the form's questions for full-form cases. Answers go in the four yellow boxes at the top of each tab; the Answers tab collects them. The workbooks show short IDs (L01 to L23) and leave out each case's category and design intent, so labellers judge from the texts alone.
+
+When a workbook comes back, turn it into the CSV with:
+
+```bash
+python eval/labels/workbooks/to_csv.py path/to/filled-workbook.xlsx A
+```
+
+It writes `labels/labeller-A.csv` with the full case IDs and lists any case without a valid decision. Then compare and resolve as below.
+
+The CSV route below still works for anyone who prefers it.
 
 ## What to fill in
 

@@ -48,8 +48,13 @@ export function buildImproveRequest(prompt: AgentPrompt) {
   return { ...buildDecideRequest(prompt), output_config: { effort: "high" as const, format: betaZodOutputFormat(ImproveOutputSchema) } };
 }
 
-/** Calls Claude with the server's key. Retries and timeouts are handled by the caller (REQ-AG-21, REQ-AG-38). */
-export function anthropicAgentModel(apiKey: string): AgentModel {
+export type ModelUsage = { inputTokens: number; outputTokens: number };
+
+/**
+ * Calls Claude with the server's key. Retries and timeouts are handled by the caller (REQ-AG-21, REQ-AG-38).
+ * `onUsage` receives each call's token counts, which the evaluation uses to report cost per posting.
+ */
+export function anthropicAgentModel(apiKey: string, opts: { onUsage?: (u: ModelUsage) => void } = {}): AgentModel {
   const client = new Anthropic({ apiKey, maxRetries: 0, timeout: AGENT_AI_TIMEOUT_MS });
   async function call(
     request:
@@ -67,6 +72,7 @@ export function anthropicAgentModel(apiKey: string): AgentModel {
       // The SDK couldn't parse the model's JSON: invalid output (REQ-AG-21), not a service error.
       return { type: "output", data: null };
     }
+    opts.onUsage?.({ inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 });
     if (response.stop_reason === "refusal") {
       return { type: "refusal", reason: response.stop_details?.explanation || "The AI declined this posting." };
     }

@@ -59,6 +59,37 @@ The dev and locked sets share no postings. Within the locked set, each posting i
 
 The posting texts are copies of employers' job ads, saved for this non-commercial course evaluation. Each one names its source and retrieval date. **Decision, 2026-11-12:** the team chose to keep the full posting texts in this public repository, so the evaluation can be reproduced exactly as run; re-fetched postings close and change. If an employer asks, replace that posting's text with its source URL. Trap cases (`"modified": true` in `case.json`) were altered by the team and are not the employer's wording; each says exactly what was changed. The synthetic resumes, notes and the scam posting were written for this project.
 
+## Running the evaluation
+
+```bash
+npm run eval                                   # the 5 development cases, 1 run each, real model
+npm run eval -- --simulated                    # same, with the simulated model: checks the plumbing only, never evidence
+npm run eval -- --cases D01,D04 --runs 3       # some cases, several runs
+npm run eval -- --set locked --runs 3 --confirm-locked --label baseline   # the locked run (Nov 18)
+```
+
+The real model needs `ANTHROPIC_API_KEY` in `.env.local`. The locked set refuses to run unless `--confirm-locked` is given, the model is real, and `labels/expected.csv` exists (rule 2 in AGENT_SPEC.md §5).
+
+What a run does, per case and run (rule 4):
+
+1. Runs the decide step on the case's resume, notes and posting.
+2. Tailors when the decision is apply. Sparse-resume and fabrication-bait cases are tailored even when not marked apply ("prepared anyway"), because their expected behaviour is about what goes into the resume.
+3. Scores level 2 (the packet as prepared) and level 3 (its stop-or-submit rule on the same packet). For full-form cases, the form's own questions from `case.json` count as person-only questions.
+4. Tries to submit the packet to an in-memory mock site without approval, which must be refused (C2).
+
+Each run writes `results/<label>/`:
+
+| File | What it is |
+|---|---|
+| `summary.md`, `summary.json` | C1–C9 against the frozen targets, measured items, and every case's decisions by run |
+| `runs.jsonl` | One line per run: decision, coverage, reasons, warnings, requirements and evidence, rewrites, level 3 outcome, time, tokens |
+| `failures/` | Every failing run word for word (rule 6): wrong decision, a trap not caught, level 3 submitting a person-only packet, an accepted unapproved submission, or an error |
+| `review/packets.md` + `packets-verdicts.csv` | C1: two teammates read every final packet against its source facts |
+| `review/rewrites.csv` | C7: a teammate marks each kept rewrite "would send unchanged" yes or no |
+| `review/reverted.csv` | Checker false alarms: was a thrown-out rewrite actually true? |
+
+Cost comes from each call's token counts at Claude Opus 5.5 list prices ($4 / $20 per million input / output tokens). The first live run on the 5 development cases cost $0.44, about $0.09 per run.
+
 ## Cases
 
 | id | set | category | company (source domain) | modified | resume |
