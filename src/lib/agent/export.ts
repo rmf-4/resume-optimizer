@@ -36,11 +36,14 @@ type Style = {
   body: number;
   name: { size: number; align: "center" | "left"; color: Hex };
   contact: { size: number; align: "center" | "left"; color: Hex };
+  /** A rule under the name and contact lines. */
+  headerRule: { color: Hex; width: number } | null;
   heading: { size: number; upper: boolean; color: Hex; rule: Hex | null; ruleWidth: number; before: number; after: number };
   entryBefore: number;
   secondaryItalic: boolean;
   right: { italic: boolean; color: Hex };
-  bullet: { glyphX: number; indent: number };
+  /** `before`: extra space between a role line and its first bullet. */
+  bullet: { glyphX: number; indent: number; before: number };
 };
 
 const BLACK = "#000000";
@@ -54,25 +57,28 @@ export const STYLES: Record<TemplateId, Style> = {
     body: 10.5,
     name: { size: 20, align: "center", color: BLACK },
     contact: { size: 9.5, align: "center", color: BLACK },
+    headerRule: null,
     heading: { size: 11.5, upper: true, color: BLACK, rule: BLACK, ruleWidth: 0.8, before: 8, after: 4 },
     entryBefore: 4,
     secondaryItalic: false,
     right: { italic: false, color: BLACK },
-    bullet: { glyphX: 5, indent: 15 },
+    bullet: { glyphX: 5, indent: 15, before: 0 },
   },
-  // Sans serif with a navy accent: left-aligned name, title-case headings, roles in italics.
+  // Sans serif with a navy accent: left-aligned name over a navy rule, title-case headings, roles in italics,
+  // bullets nested under their role.
   modern: {
     fonts: { regular: "Lato-Regular", bold: "Lato-Bold", italic: "Lato-Italic", docx: "Calibri" },
-    margin: { x: 50, y: 40 },
+    margin: { x: 48, y: 38 },
     leading: 1.2,
-    body: 11,
-    name: { size: 24, align: "left", color: "#1F3A5F" },
-    contact: { size: 10, align: "left", color: "#4A5260" },
-    heading: { size: 12.5, upper: false, color: "#1F3A5F", rule: "#9AA8BC", ruleWidth: 0.6, before: 10, after: 4 },
+    body: 10.5,
+    name: { size: 22, align: "left", color: "#1F3A5F" },
+    contact: { size: 9.5, align: "left", color: "#4A5260" },
+    headerRule: { color: "#1F3A5F", width: 1.4 },
+    heading: { size: 11.5, upper: false, color: "#1F3A5F", rule: "#B4BFCE", ruleWidth: 0.6, before: 9, after: 3.5 },
     entryBefore: 5,
     secondaryItalic: true,
     right: { italic: false, color: "#4A5260" },
-    bullet: { glyphX: 4, indent: 14 },
+    bullet: { glyphX: 9, indent: 19, before: 1.5 },
   },
   // Dense layout for a full page: small sans serif, tight spacing, grey rules.
   compact: {
@@ -82,11 +88,12 @@ export const STYLES: Record<TemplateId, Style> = {
     body: 9.5,
     name: { size: 16, align: "left", color: BLACK },
     contact: { size: 9, align: "left", color: "#333333" },
+    headerRule: null,
     heading: { size: 10, upper: true, color: BLACK, rule: "#8C8C8C", ruleWidth: 0.6, before: 6, after: 2.5 },
     entryBefore: 3,
     secondaryItalic: true,
     right: { italic: false, color: "#333333" },
-    bullet: { glyphX: 3, indent: 11 },
+    bullet: { glyphX: 3, indent: 11, before: 0 },
   },
 };
 
@@ -265,7 +272,14 @@ function layout(blocks: Block[], style: Style, fonts: Fonts, scale: number): Lay
 
   const body = sc(style.body);
   let prev: Block | null = null;
+  let headerRuleDone = !style.headerRule;
   for (const b of blocks) {
+    if (!headerRuleDone && b.kind !== "name" && b.kind !== "contact") {
+      headerRuleDone = true;
+      y -= sc(4);
+      rules.push({ page, x1: mx, x2: PAGE_W - mx, y, width: style.headerRule!.width, color: style.headerRule!.color });
+      y -= sc(2);
+    }
     switch (b.kind) {
       case "name":
         paragraph([{ text: b.text, font: fonts.bold }], sc(style.name.size), style.name.color, mx, width, style.name.align);
@@ -304,6 +318,7 @@ function layout(blocks: Block[], style: Style, fonts: Fonts, scale: number): Lay
         break;
       }
       case "bullet": {
+        if (prev?.kind === "entry") y -= sc(style.bullet.before);
         const lines = wrapSegs([{ text: b.text, font: fonts.regular }], body, width - sc(style.bullet.indent));
         lines.forEach((l, i) => {
           advance(body * style.leading);
@@ -427,14 +442,26 @@ export async function exportDocx(text: string, template: TemplateId = "classic")
   const textWidth = twips(PAGE_W - 2 * style.margin.x);
 
   let prev: Block | null = null;
-  const paras = blocks.map((b) => {
+  const lastHeader = blocks.reduce((last, b, i) => (b.kind === "name" || b.kind === "contact" ? i : last), -1);
+  const headerRule = (i: number) => (style.headerRule && i === lastHeader ? { color: style.headerRule.color, width: style.headerRule.width } : undefined);
+  const paras = blocks.map((b, i) => {
     let p: string;
     switch (b.kind) {
       case "name":
-        p = paragraph(run(b.text, font, { bold: true, size: sc(style.name.size), color: style.name.color }), { align: style.name.align, after: sc(2), line });
+        p = paragraph(run(b.text, font, { bold: true, size: sc(style.name.size), color: style.name.color }), {
+          align: style.name.align,
+          after: sc(2),
+          rule: headerRule(i),
+          line,
+        });
         break;
       case "contact":
-        p = paragraph(run(b.text, font, { size: sc(style.contact.size), color: style.contact.color }), { align: style.contact.align, line });
+        p = paragraph(run(b.text, font, { size: sc(style.contact.size), color: style.contact.color }), {
+          align: style.contact.align,
+          after: i === lastHeader && style.headerRule ? sc(4) : 0,
+          rule: headerRule(i),
+          line,
+        });
         break;
       case "heading": {
         const h = style.heading;
@@ -456,6 +483,7 @@ export async function exportDocx(text: string, template: TemplateId = "classic")
       }
       case "bullet":
         p = paragraph(run("•", font, { size: body }) + TAB_RUN + run(b.text, font, { size: body }), {
+          before: prev?.kind === "entry" ? sc(style.bullet.before) : 0,
           indent: { left: sc(style.bullet.indent), hanging: sc(style.bullet.indent - style.bullet.glyphX) },
           line,
         });

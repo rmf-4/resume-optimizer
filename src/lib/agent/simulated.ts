@@ -91,13 +91,13 @@ const WEAK_OPENINGS: Array<[RegExp, string]> = [
 ];
 
 /** Rewrites only weak openings, adding nothing else, so the checker has something to pass or catch. */
-export function simulateTailor(ctx: TailorContext): { rewrites: { bullet_id: number; text: string }[] } {
+export function simulateTailor(ctx: TailorContext): { rewrites: { bullet_id: number; text: string }[]; lead_bullet_ids: number[] } {
   const rewrites: { bullet_id: number; text: string }[] = [];
   for (const b of ctx.bullets) {
     const hit = WEAK_OPENINGS.find(([re]) => re.test(b.text));
     if (hit) rewrites.push({ bullet_id: b.id, text: b.text.replace(hit[0], hit[1]) });
   }
-  return { rewrites };
+  return { rewrites, lead_bullet_ids: [] };
 }
 
 export const simulatedModel: AgentModel = {

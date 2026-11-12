@@ -132,3 +132,18 @@ describe("REQ-AG-19 finding types", () => {
     expect([...idx].sort((x, y) => x - y)).toEqual(idx);
   });
 });
+
+describe("new_skill scoped to gaps", () => {
+  const gaps = ["Experience with ERP systems such as SAP.", "Comfort with developer tools (e.g. git) and data visualization"];
+
+  it("test_gap_terms_flagged_but_everyday_posting_words_are_not", () => {
+    // "dashboards" is in the posting but not a gap, so with gaps given it isn't a claim.
+    expect(run("Built an Excel model and dashboards", { gaps })).toEqual([]);
+    expect(run("Built an Excel model with data visualization in git", { gaps })).toContainEqual({ type: "new_skill", text: "visualization" });
+    expect(run("Built an Excel model for ERP systems", { gaps })).toContainEqual(expect.objectContaining({ type: "new_skill" }));
+  });
+
+  it("test_empty_gaps_means_no_new_skill_but_other_checks_still_run", () => {
+    expect(run("Built an Excel model for 40 clients in Tableau", { gaps: [] }).map((f) => f.type)).toEqual(["new_number", "new_name"]);
+  });
+});

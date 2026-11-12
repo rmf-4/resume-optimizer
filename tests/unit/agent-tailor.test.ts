@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { check } from "@/lib/agent/check";
 import { runDecide, type DecideResult } from "@/lib/agent/run";
 import { simulatedModel } from "@/lib/agent/simulated";
-import { applyRewrites, assembleResume, buildTailorPrompt, runTailor } from "@/lib/agent/tailor";
+import { applyRewrites, assembleResume, bulletEntries, buildTailorPrompt, runTailor } from "@/lib/agent/tailor";
 import type { AgentModel } from "@/lib/agent/types";
 import type { ModelResult } from "@/lib/step1/types";
 import { findBullets } from "@/lib/text";
@@ -30,6 +30,62 @@ describe("REQ-AG-14 / REQ-AG-15 assembly", () => {
     const b = findBullets(resume);
     const out = assembleResume(resume, b, new Map([[1, "Ran weekly standups for the data team"], [2, "Built Excel dashboards"]]));
     expect(out).toBe(["Sam Doe", "  - Ran weekly standups for the data team", "Acme | Analyst | 2020 – 2022", "* Built Excel dashboards"].join("\n"));
+  });
+});
+
+describe("REQ-AG-14 lead bullet per entry", () => {
+  const twoRoles = [
+    "Sam Doe",
+    "EXPERIENCE",
+    "Acme | Analyst | 2020 – 2022",
+    "• Built dashboards in Excel",
+    "• Wrote SQL queries for weekly reports",
+    "  • Presented findings to managers",
+    "Beta Co | Intern | 2019",
+    "- Filed invoices",
+    "- Reconciled vendor statements in Excel",
+  ].join("\n");
+  const b = findBullets(twoRoles);
+
+  it("test_lead_bullet_moves_to_top_of_its_entry_only", () => {
+    const r = applyRewrites({ resume: twoRoles, posting: JOB_DESCRIPTION, bullets: b, keywords: [], raw: { rewrites: [], lead_bullet_ids: [2, 5] } });
+    expect(r.tailored.split("\n")).toEqual([
+      "Sam Doe",
+      "EXPERIENCE",
+      "Acme | Analyst | 2020 – 2022",
+      "• Wrote SQL queries for weekly reports",
+      "• Built dashboards in Excel",
+      "  • Presented findings to managers",
+      "Beta Co | Intern | 2019",
+      "- Reconciled vendor statements in Excel",
+      "- Filed invoices",
+    ]);
+    expect(r.moved.map((m) => m.bulletId)).toEqual([2, 5]);
+    expect(r.counts.moved).toBe(2);
+  });
+
+  it("test_invalid_or_duplicate_leads_are_ignored", () => {
+    // 1 is already first; 99 doesn't exist; 3 is a second lead for the same entry as 2.
+    const r = applyRewrites({ resume: twoRoles, posting: JOB_DESCRIPTION, bullets: b, keywords: [], raw: { rewrites: [], lead_bullet_ids: [1, 99, 2, 3] } });
+    expect(r.moved.map((m) => m.bulletId)).toEqual([2]);
+  });
+
+  it("test_moved_bullet_carries_its_rewrite", () => {
+    const r = applyRewrites({
+      resume: twoRoles,
+      posting: JOB_DESCRIPTION,
+      bullets: b,
+      keywords: [],
+      raw: { rewrites: [{ bullet_id: 2, text: "Wrote weekly SQL queries for reports" }], lead_bullet_ids: [2] },
+    });
+    expect(r.tailored.split("\n")[3]).toBe("• Wrote weekly SQL queries for reports");
+    expect(r.tailored.split("\n")[4]).toBe("• Built dashboards in Excel");
+  });
+
+  it("test_bullets_carry_their_entry_context", () => {
+    const entries = bulletEntries(twoRoles, b);
+    expect(entries.get(1)).toBe("Sam Doe | EXPERIENCE | Acme | Analyst | 2020 – 2022");
+    expect(entries.get(5)).toBe("Beta Co | Intern | 2019");
   });
 });
 
@@ -142,6 +198,7 @@ describe("REQ-AG-13 tailor run", () => {
         return { type: "output", data: { requirements: [] } };
       },
       async tailor(prompt: { system: string; user: string }): Promise<ModelResult> {
+        // (returns whatever the test gave it)
         m.tailorCalls++;
         m.lastUser = prompt.user;
         return result;
@@ -152,7 +209,7 @@ describe("REQ-AG-13 tailor run", () => {
 
   it("test_no_tailoring_on_skip_or_needs_human_without_override", async () => {
     const d = { ...(await decided()), decision: "skip" as const };
-    const model = stub({ type: "output", data: { rewrites: [] } });
+    const model = stub({ type: "output", data: { rewrites: [], lead_bullet_ids: [] } });
     const out = await runTailor(input, d, model);
     expect(out.ok).toBe(false);
     if (!out.ok) expect(out.error.code).toBe("not_apply");
@@ -167,11 +224,11 @@ describe("REQ-AG-13 tailor run", () => {
     const p = buildTailorPrompt({
       source: "Jordan · [email]\n• Built an Excel model",
       posting: "Needs SQL",
-      bullets: [{ id: 1, text: "Built an Excel model" }],
+      bullets: [{ id: 1, text: "Built an Excel model", entry: "Northwind | Analyst" }],
       supported: ["Excel"],
       gaps: ["Tableau dashboards"],
     });
-    expect(p.user).toContain('<bullet id="1">Built an Excel model</bullet>');
+    expect(p.user).toContain('<entry context="Northwind | Analyst">\n<bullet id="1">Built an Excel model</bullet>\n</entry>');
     expect(p.user).toContain("Tableau dashboards");
     expect(p.user).not.toContain("@");
   });

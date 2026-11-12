@@ -148,7 +148,9 @@ export function createAgentExportHandler(deps: Pick<AgentDeps, "exportLimiter">)
     }
 
     const { cleaned } = scanInputs({ resume: inputs.resume, posting: inputs.posting, notes: inputs.notes || undefined });
-    const findings = check({ candidate: tailored, source: composeSource(cleaned.resume, cleaned.notes), posting: cleaned.posting });
+    // No posting here: the gaps that `new_skill` needs live in the decide result, which isn't stored yet.
+    // Numbers, dates, names, contacts, role inflation and hidden text are all still checked.
+    const findings = check({ candidate: tailored, source: composeSource(cleaned.resume, cleaned.notes) });
     if (findings.length > 0) {
       return json(
         { error: { code: "export_blocked", message: "This resume has text the source facts don't support, so it can't be exported." }, findings },

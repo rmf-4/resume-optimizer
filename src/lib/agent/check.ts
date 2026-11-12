@@ -23,8 +23,13 @@ export type CheckInput = {
   candidate: string;
   /** Source facts: the client's confirmed resume text plus the coach's notes. */
   source: string;
-  /** The posting. Needed only for `new_skill`. */
+  /** The posting. Used for `new_skill` when `gaps` isn't given. */
   posting?: string;
+  /**
+   * Requirements the source facts show no evidence for (the decide step's gaps). When given, `new_skill`
+   * flags only words from these, not every word of the posting: long postings use most everyday words.
+   */
+  gaps?: string[];
   /** Text a leadership verb must already appear in: the original bullet plus the notes. Defaults to `source`. */
   baseline?: string;
 };
@@ -323,8 +328,9 @@ export function check(input: CheckInput): Finding[] {
   }
 
   // new_skill
-  if (input.posting) {
-    const postingStems = new Set(tokenize(input.posting).filter((w) => !STOPWORDS.has(w)).map(baseStem));
+  const claimText = input.gaps ? input.gaps.join("\n") : input.posting;
+  if (claimText) {
+    const postingStems = new Set(tokenize(claimText).filter((w) => !STOPWORDS.has(w)).map(baseStem));
     const isNewSkill = (t: Token) => {
       const w = t.text.toLowerCase();
       const s = baseStem(w);

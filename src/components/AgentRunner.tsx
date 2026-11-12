@@ -486,13 +486,25 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
           {t.preparedAnyway && <p className={base.badge}>Prepared anyway</p>}
 
           <h3>Rewrites kept ({t.kept.length})</h3>
-          {t.kept.length === 0 && <p className={base.hint}>No rewrite passed the checks, so the resume is unchanged.</p>}
+          {t.kept.length === 0 && <p className={base.hint}>No bullet text changed for this job.</p>}
           {t.kept.map((k) => (
             <div key={k.bulletId} className={styles.pair}>
               <p className={styles.before}>{k.original}</p>
               <p className={styles.after}>{highlightNew(k.original, k.rewrite)}</p>
             </div>
           ))}
+
+          {t.moved.length > 0 && (
+            <>
+              <h3>Moved to the top for this job ({t.moved.length})</h3>
+              <p className={base.hint}>Each of these now leads its role or project. Nothing moved between roles.</p>
+              <ul className={styles.reasons}>
+                {t.moved.map((m) => (
+                  <li key={m.bulletId}>{m.text}</li>
+                ))}
+              </ul>
+            </>
+          )}
 
           {t.reverted.length > 0 && (
             <>
@@ -558,7 +570,7 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
             </p>
           )}
           <p className={styles.counts}>
-            Rewrites suggested {t.counts.requested} · kept {t.counts.kept} · thrown out {t.counts.reverted}
+            Rewrites suggested {t.counts.requested} · kept {t.counts.kept} · thrown out {t.counts.reverted} · bullets moved {t.counts.moved}
           </p>
         </section>
       )}

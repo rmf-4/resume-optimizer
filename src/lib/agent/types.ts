@@ -7,7 +7,8 @@ export type DecideContext = { source: string; posting: string };
 
 /** What the tailor step's model saw: redacted facts and posting, bullets by id, and the decide step's findings. */
 export type TailorContext = DecideContext & {
-  bullets: { id: number; text: string }[];
+  /** Each bullet with the heading, organisation and role lines above its run of bullets. */
+  bullets: { id: number; text: string; entry?: string }[];
   /** Requirement quotes with evidence: wording the rewrites may use. */
   supported: string[];
   /** Requirement quotes with no evidence: never to be claimed. */
