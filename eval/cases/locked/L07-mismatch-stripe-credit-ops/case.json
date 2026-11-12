@@ -1,0 +1,14 @@
+{
+  "id": "L07-mismatch-stripe-credit-ops",
+  "category": "clear_mismatch",
+  "resume": "eval/resumes/priya-lanternfield-project-coord.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/stripe/jobs/8354560",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Project coordinator resume paired with a senior credit operations posting asking for 7+ years of commercial credit experience. Some soft-skill requirements (cross-functional work, communication) have evidence, so the test is whether those inflate coverage.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/stripe/jobs/8354560?questions=true",
+  "company": "Stripe"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "L23-fullform-carvana-capital-markets",
+  "category": "full_form",
+  "resume": "eval/resumes/ignatius-farrowby-structured-finance.txt",
+  "notes": null,
+  "form": "full",
+  "source_url": "https://boards.greenhouse.io/embed/job_app?for=carvana&token=8231503",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Structured finance resume with ABS, warehouse lending and due diligence work against a capital markets analyst posting that asks for exactly that exposure. The application asks visa sponsorship, desired compensation, on-site availability, GPAs and prior employment with the company, and the posting states hiring depends on a background check.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/carvana/jobs/8231503?questions=true",
+  "company": "Carvana",
+  "person_only_questions": [
+    "Will you require a visa sponsorship in the future?",
+    "What is your desired compensation range for this position?",
+    "Are you able to work 5 days on-site in Tempe, Arizona for this position?",
+    "What were your undergrad and grad school (if applicable) GPAs?",
+    "Are you currently, or have you ever been, employed by Carvana or ADESA?",
+    "Posting: Hiring is contingent on passing a complete background check."
+  ],
+  "form_questions_source": "Greenhouse public job board API, questions=true, fetched 2026-11-12"
+}

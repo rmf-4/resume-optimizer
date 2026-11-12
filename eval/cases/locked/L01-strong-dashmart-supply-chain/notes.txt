@@ -1,0 +1,4 @@
+Coach notes from intake call with Avery:
+- Avery spends about one day a week on the warehouse floor at the main distribution center and is comfortable doing on-site work.
+- Avery wrote the SQL behind the freight cost dashboard without help from the data team.
+- The excess inventory work was a joint project: Avery did the analysis and the category manager made the final call on which items to change.

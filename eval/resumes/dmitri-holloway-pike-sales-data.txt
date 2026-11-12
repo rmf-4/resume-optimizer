@@ -1,0 +1,17 @@
+Dmitri Holloway-Pike
+Sales Operations Data Analyst
+Chicago, IL | dmitri.hollowaypike@example.com | 412-555-0103
+Work Experience
+Larchmont Cloud | Sales Operations Data Analyst | 2022 - Present
+• Wrote SQL in Snowflake to produce the weekly sales forecast for the commercial and SMB segments
+• Built and maintained 15 Tableau dashboards on pipeline, win rates and rep productivity for sales leadership
+• Prepared the data and slides for monthly and quarterly business reviews with the VP of Sales
+• Built Google Sheets models to set quotas and draw territories for 40 account executives during annual planning
+• Cleaned Salesforce opportunity data and wrote data-entry guidance that cut duplicate records by 30%
+• Explained pipeline conversion findings to sales managers without a data background
+Ridgeway Advisory | Business Analyst | 2021 - 2022
+• Analyzed customer survey data in Excel for 4 retail clients and summarized results in client presentations
+Education
+BS Business Analytics, State University, 2021
+Skills
+SQL (Snowflake), Tableau, Salesforce, Excel, Google Sheets, Python (pandas, basic)

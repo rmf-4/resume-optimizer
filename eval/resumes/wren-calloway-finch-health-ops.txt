@@ -1,0 +1,20 @@
+Wren Calloway-Finch
+Claims Operations Analyst
+New York, NY | wren.callowayfinch@example.com | 412-555-0104
+Work Experience
+Keystone Mutual Health Plan | Claims Operations Analyst | 2022 - Present
+• Configured benefit and pricing rules in the claims system for new plan launches each January
+• Used SQL and Excel to investigate claims payment errors and traced the root cause for 1,200 misrouted claims
+• Designed an automated intake workflow for provider disputes that removed 3 manual handoffs
+• Developed KPIs on claims turnaround time and reported them monthly to the operations director
+• Wrote procedures for new workflows and trained 14 claims processors to use them
+• Coordinated a 6-month project with IT and Compliance to move appeals tracking from spreadsheets to Jira
+• Maintained compliance documentation for state regulatory audits
+Keystone Mutual Health Plan | Claims Processor | 2020 - 2022
+• Processed professional and facility claims and flagged pricing discrepancies to the configuration team
+Education
+BA Economics, State University, 2020
+Certifications
+Lean Six Sigma Yellow Belt, 2023
+Skills
+SQL, Excel, Python (basic), Jira, Visio, Facets claims system

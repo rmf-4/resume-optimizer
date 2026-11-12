@@ -1,0 +1,14 @@
+{
+  "id": "L04-strong-oscar-pricing-config",
+  "category": "strong_match",
+  "resume": "eval/resumes/wren-calloway-finch-health-ops.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/oscar/jobs/8374121",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Health-insurance claims operations resume written against a health-plan configuration posting (operations or health insurance years, Excel/SQL, analytics, workflow design). Tests whether year-count requirements are matched to employer date lines and whether rewrites keep the numbers exact.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/oscar/jobs/8374121?questions=true",
+  "company": "Oscar Health"
+}

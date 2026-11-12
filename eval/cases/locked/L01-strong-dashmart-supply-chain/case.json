@@ -1,0 +1,14 @@
+{
+  "id": "L01-strong-dashmart-supply-chain",
+  "category": "strong_match",
+  "resume": "eval/resumes/avery-quillstone-supply-chain.txt",
+  "notes": "notes.txt",
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/doordashusa/jobs/8273901",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Resume was written to cover the posting's SQL, visualization-tool, AI-tool, supply chain and process-improvement asks with numbered evidence; tests evidence finding and tailoring on a well-aligned pair. The notes add true context that limits ownership claims (joint project), which tests scope_change handling.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/doordashusa/jobs/8273901?questions=true",
+  "company": "DoorDash"
+}

@@ -1,0 +1,82 @@
+Associate,  DashMart - Supply Chain Profitability Strategy & Operations
+New York, NY; San Francisco, CA; Seattle, WA; Los Angeles, CA; Washington DC; Chicago, IL; Tempe, AZ
+
+About the Team
+
+Our New Verticals Strategy & Operations team is re-inventing the way consumers think about grocery, convenience, alcohol and retail delivery through both our first-party and third-party operations businesses. DashMarts are our first-party offering designed to provide on-demand deliveries by selling household essentials, groceries, brand-name favorites, local favorites and so much more. The end to end DashMart experience is powered through DoorDash. Third-party partnerships enable us to offer on-demand deliveries from both SMB and enterprise merchants across grocery, convenience alcohol and retail storefronts. The merchants own the inventory, we fulfill and deliver them!
+
+About the Role
+
+We are hiring an Associate to join the DashMart Strategy & Operations organization, focused on reducing supply chain costs to drive profitability. In this role, you will use SQL and AI to analyze data, identify cost benefit opportunities, and design solutions from the ground up. Projects may include cost optimization across inventory and freight. Solutions may be process-driven, working closely with Ops, Supply Chain, Vendor Management, and Category, or product-driven, partnering with Product and Engineering teams to build scalable fixes. You will be goaled directly against a key profitability metric, making this a highly visible role with outsized impact on the bottom line.
+
+We're looking for someone with strong analytical and problem-solving skills who can think outside the box to uncover non-obvious opportunities and creative solutions. You should bring a high degree of ownership and be comfortable independently driving a project from data analysis through cross-functional execution. This role sits at the intersection of operations, product, and finance, and is critical to DashMart's profitability goals.
+
+You will report into a Manager within the DashMart team. We operate in a hybrid work model with opportunities for in-person collaboration a few times a year, and all our offices are open should you choose to go in on a more regular basis! All employees that work on DashMart are also expected to spend time understanding the operation on site.
+
+You’re excited about this opportunity because you will…
+
+- Strategize. You’ll set financial goals for profitability metrics in both the short and long term, and create the playbook to achieve those goals.
+
+- Analyze. You'll assess financial opportunity and operational impacts of your decisions across the entire business, and iterate based on data.
+
+- Build. You’ll own the implementation of your strategies end to end, from documenting processes and requirements to measuring the success of the results.
+
+- Scale. You’ll transform analytical insights into operational experiments that create measurable and scalable improvements to profitability.
+
+- Lead and collaborate. You’ll influence a cross-functional team including vendor management, supply chain, category management, product, engineering, and finance to solve problems and scale solutions.
+
+We’re excited about you because…
+
+- You have subject matter expertise in process improvement, data modeling, supply chain, and strong financial and business acumen.
+
+- You’re equally comfortable operating at 10,000 feet and 1 foot. You don’t hesitate to get in the weeds with SQL and data analysis, but you’re just as comfortable influencing roadmap discussions and strategic priorities.
+
+- You're unafraid of undefined processes. You are a creative problem solver who’s proficient at defining net new processes. You excel at working with a diverse group of people.
+
+- You’re analytical. You have a strong analytical background, advanced SQL proficiency, and experience with analytical visualization tooling (Sigma, Mode, Tableau, etc.). You have past experience building SQL queries from scratch and leveraging insights to drive business decisions.
+
+- You are AI native. You think systematically about where AI can make your work better and have used AI tools like Claude, Cursor, Gemini, etc. to enhance, refine and deepen your workflows.
+
+- You have 1-3+ years of experience. You've succeeded at expanding businesses (whether in tech, retail, operations, strategy, consulting, banking, or a related experience).
+
+You have completed your BS/BA Degree ideally in supply chain, business, economics, engineering or a related field.
+
+We expect this position to be filled by 12-12-2026
+
+Compensation
+
+The successful candidate’s starting pay will fall within the pay range listed below and is determined based on job-related factors including, but not limited to, skills, experience, qualifications, work location, and market conditions. Base salary is localized according to an employee’s work location. Ranges are market-dependent and may be modified in the future.
+
+In addition to base salary, the compensation for this role includes opportunities for equity grants. Talk to your recruiter for more information.
+
+DoorDash cares about you and your overall well-being. That’s why we offer a comprehensive benefits package to all regular employees, which includes a 401(k) plan with employer matching, 16 weeks of paid parental leave, wellness benefits, commuter benefits match, paid time off and paid sick leave in compliance with applicable laws (e.g. Colorado Healthy Families and Workplaces Act). DoorDash also offers medical, dental, and vision benefits, 11 paid holidays, disability and basic life insurance, family-forming assistance, and a mental health program, among others.
+
+To learn more about our benefits, visit our careers page here.
+
+See below for paid time off details:
+
+- For salaried roles: flexible paid time off/vacation, plus 80 hours of paid sick time per year.
+
+- For hourly roles: vacation accrued at about 1 hour for every 25.97 hours worked (e.g. about 6.7 hours/month if working 40 hours/week; about 3.4 hours/month if working 20 hours/week), and paid sick time accrued at 1 hour for every 30 hours worked (e.g. about 5.8 hours/month if working 40 hours/week; about 2.9 hours/month if working 20 hours/week).
+
+The national base pay range for this position within the United States, including Illinois and Colorado.
+
+$74,800—$110,000 USD
+
+About DoorDash
+
+At DoorDash, our mission to empower local economies shapes how our team members move quickly, learn, and reiterate in order to make impactful decisions that display empathy for our range of users—from Dashers to merchant partners to consumers. We are a technology and logistics company that started by enabling door-to-door delivery, and we are looking for team members who can help us go from a company that is known as the place you order food to a company that people turn to for any and all goods.
+
+DoorDash is growing rapidly and changing constantly, which gives our team members the opportunity to share their unique perspectives, solve new challenges, and own their careers. We're committed to supporting employees’ happiness, healthiness, and overall well-being by providing comprehensive benefits and perks including premium healthcare, wellness expense reimbursement, paid parental leave and more.
+
+Our Commitment to Diversity and Inclusion
+
+We’re committed to growing and empowering a more inclusive community within our company, industry, and cities. That’s why we hire and cultivate diverse teams of people from all backgrounds, experiences, and perspectives. We believe that true innovation happens when everyone has room at the table and the tools, resources, and opportunity to excel.
+
+Statement of Non-Discrimination: In keeping with our beliefs and goals, no employee or applicant will face discrimination or harassment based on: race, color, ancestry, national origin, religion, age, gender, marital/domestic partner status, sexual orientation, gender identity or expression, disability status, or veteran status. Above and beyond discrimination and harassment based on “protected categories,” we also strive to prevent other subtler forms of inappropriate behavior (i.e., stereotyping) from ever gaining a foothold in our office. Whether blatant or hidden, barriers to success have no place at DoorDash. We value a diverse workforce – people who identify as women, non-binary or gender non-conforming, LGBTQIA+, American Indian or Native Alaskan, Black or African American, Hispanic or Latinx, Native Hawaiian or Other Pacific Islander, differently-abled, caretakers and parents, and veterans are strongly encouraged to apply. Thank you to the Level Playing Field Institute for this statement of non-discrimination.
+
+If you need any accommodations, please inform your recruiting contact upon initial connection.
+
+Notice Regarding Use of AI and Automated Tools: To streamline our hiring process, DoorDash utilizes an automated recruitment tool called Metaview.
+
+How it works: Metaview assists our recruiting team by evaluating job related qualifications and characteristics in connection with hiring. The tool is designed and used to support - rather than replace - human decision-making; trained personnel make final decisions with meaningful human review and oversight, and DoorDash does not use Metaview or other AI-enabled tool in a manner that has the effect of subjecting applicants or employees to discrimination based on any protected characteristic or proxy or for engaging in any protected activity under applicable law.

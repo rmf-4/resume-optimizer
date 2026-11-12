@@ -1,0 +1,82 @@
+Finance Associate
+New York, New York, United States
+
+Why join us
+
+Brex is the intelligent finance platform that enables companies to spend smarter and move faster in more than 200 markets. By combining global corporate cards and banking with intuitive spend management, bill pay, and travel software, Brex enables founders and finance teams to accelerate operations, gain real-time visibility, and control spend effortlessly. Brex’s AI-native automation and world-class service eliminate manual expense and accounting tasks for customers so they can focus on what matters most. Tens of thousands of the world's best companies run on Brex, including DoorDash, Coinbase, Robinhood, Zoom, Plaid, Reddit, and SeatGeek.
+
+Working at Brex allows you to push your limits, challenge the status quo, and collaborate with some of the brightest minds in the industry. We’re committed to building a diverse team and inclusive culture and believe your potential should only be limited by how big you can dream. We make this a reality by empowering you with the tools, resources, and support you need to grow your career.
+
+Finance at Brex
+
+The Finance team is a strategic engine at Brex. We lead planning, forecasting, capital allocation, and ROI analysis — partnering across the business to drive clarity and unlock opportunity. We partner across teams at Brex to ensure our business is building and planning with the same dream big goals throughout our entire organization. We’re not here to report on outcomes; we shape them. If you want to influence company direction and think long-term about value creation, this is where your ownership starts.
+
+- Cross-functional alignment: We work on complex problems that cut across Engineering, Product, Design, Sales, Marketing, Revenue Operations, CX, and more. This requires the ability to generate buy-in from a wide set of stakeholders on key initiatives.
+
+- Business intelligence: We are a data-driven organization that always provides data to support our decision-making. When data is not available, we find it in market and competitive research. We convey complex financial information to varied stakeholders in order to influence decisions.
+
+- Problem solving: We lead with solutions by defining an ambiguous problem, processing information, applying judgment and creativity, and generating buy-in around the answer. This requires the ability to not only track and improve key metrics, but to define what those key metrics should be.
+
+- Building, not just advising: We ship the models, tooling, and automation that the frameworks depend on, and we own their accuracy.
+
+Where you’ll work
+
+This role will be based in our New York office. We are a hybrid environment that combines the energy and connections of being in the office with the benefits and flexibility of working from home. We currently require a minimum of three coordinated days in the office per week Monday, Wednesday, and Thursday. As a perk, we also have up to four weeks per year of fully remote work!
+
+What You’ll Do
+
+We are building out the Strategic Finance team and looking for someone to join the function and partner with leadership to maximize ROI from our investments.
+
+In this role, you will own the frameworks Brex uses to underwrite and measure return on investment across the business. You will translate roadmap proposals, GTM investments, headcount requests, and pricing changes into expected return, payback, and opportunity cost, so that business partners and Finance underwrite decisions off the same set of numbers. You will work with leaders across the company, and you will close the loop after the fact, measuring realized return against what was originally underwritten.
+
+You will bring both the financial and the commercial point of view, and need to embrace challenges and structure complex problems. This role carries high exposure to Executive Leadership, as you will regularly deliver analysis and recommendations directly to the Leadership team.
+
+Responsibilities
+
+- Build and own the frameworks used to evaluate investment decisions across the business, spanning R&D, GTM, headcount, and pricing
+
+- Partner with business leaders on capital allocation: sizing the cost of a given bet, pricing the tradeoffs between competing uses of the next dollar, and framing opportunity cost in terms leadership can act on
+
+- Develop the unit economics and ROI measurement standards applied to new product launches, pricing changes, GTM programs, and platform investments
+
+- Run post-investment measurement on major bets, comparing realized return to what was underwritten and feeding those learnings back into the framework
+
+- Quantify the downstream commercial impact of product and GTM decisions on revenue, margin, and customer lifetime value
+
+- Translate operating and capacity inputs into financial impact, and financial constraints into terms business partners can plan against
+
+- Build shared definitions and a single source of truth across Finance, EPD, GTM, and Revenue Operations so all organizations plan off the same numbers
+
+- Ship the models, dashboards, and automation the frameworks depend on, and own their accuracy
+
+- Provide ad hoc analytical support to GTM Finance and Revenue Operations on pipeline, conversion, retention, expansion, and go-to-market efficiency questions
+
+Requirements
+
+- Bachelor’s Degree in Economics, Finance, Business, or related field
+
+- 2+ years of Strategic Finance, FP&A, or Investment Banking experience
+
+- An AI-first mindset: you default to asking how AI can improve every workflow, you actively experiment with new tools, and you have used AI to accelerate analysis or automate a task
+
+- Mastery of Excel and PowerPoint with proven experience in building financial models and managing complex data
+
+- Strong communication, team-working, quantitative and analytical skills
+
+- Intellectual curiosity, a collaborative work style, and the drive to take ownership in a fast-moving environment
+
+- Comfort managing multiple workstreams simultaneously and proactively driving work forward without being asked
+
+- A bias toward proactive insight over reactive reporting
+
+- Ability to operate independently, build structure in ambiguous environments, and prioritize effectively
+
+- Comfort working directly in data: SQL or BI tooling experience is a strong plus (Snowflake, Hex, Looker, or Salesforce)
+
+Compensation
+
+The expected salary range for this role is $117,520 USD - $146,900 USD. However, the starting base pay will depend on a number of factors including the candidate’s location, skills, experience, market demands, and internal pay parity. Depending on the position offered, equity and other forms of compensation may be provided as part of a total compensation package
+
+Brex LLC is a wholly owned subsidiary of Capital One, N.A.
+
+Please be aware, job-seekers may be at risk of targeting by malicious actors looking for personal data. Brex recruiters will only reach out via LinkedIn or email with a brex.com domain. Any outreach claiming to be from Brex via other sources should be ignored.

@@ -1,0 +1,82 @@
+Analyst, Transportation & Supply Chain Strategy
+Atlanta, Georgia, United States; Bellevue, Washington, United States; Chicago, Illinois, United States; Dallas, Texas, United States; Los Angeles, California, United States; New York City, New York, United States
+
+About Flexport:
+
+At Flexport, we believe global trade can move the human race forward. That’s why it’s our mission to make global commerce so easy there will be more of it. We’re shaping the future of a $10T industry with solutions powered by innovative technology and exceptional people. Today, companies of all sizes—from emerging brands to Fortune 500s—use Flexport technology to move more than $19B of merchandise across 112 countries a year.
+
+The recent global supply chain crisis has put Flexport center stage as we continue to play a pivotal role in how goods move around the world. We are proud to have the support of the best investors in the game who believe in our mission, solutions and people. Ready to tackle global challenges that impact business, society, and the environment? Come join us.
+
+The Opportunity
+
+We're looking for an Analyst who thrives at the intersection of transportation economics, supply chain strategy, and quantitative modeling. This is a high-visibility individual contributor role—you won't be managing people, you'll be doing the work that directly shapes our network design, carrier strategy, and cost structure. In this role, you will not just build models, but proactively identify high-impact cost-saving and optimization opportunities, transforming raw analysis into business-critical strategy.Your analysis will inform senior leadership decisions on carrier RFPs, zone skip expansion, FC location strategy, and how we price and position our fulfillment product against competitors. You'll partner closely with carrier ops managers, supply chain leadership, data science, and commercial teams to turn complex data into clear, actionable recommendations.
+
+You Will
+
+- Own lane analysis and zone skip strategy including lane-level margin modeling, utilization thresholds, go/no-go decision frameworks for trailer dispatch, and identification of new lane opportunities across our middle mile and deep injection network.
+
+- Drive Cross-Functional Execution: Translate complex operational and network simulations into structured project plans; partner closely with Product and Engineering teams to scale standalone analytical tools into platform-native features.
+
+- Build cost models and simulations that forecast the financial and service impact of network changes before they go live—new zone skip lanes, carrier mix shifts, rate card scenarios, schedule changes, and FC expansion. Your models will be the analytical foundation for major capital and operational decisions.
+
+- Conduct shipment and transportation cost analysis including label cost trends, carrier overpayment identification, rate shopping effectiveness, and per-shipment margin by merchant, lane, and carrier—surfacing where cost is leaking and quantifying the opportunity to recover it.
+
+- Support carrier RFP and network strategy by modeling rate card scenarios, benchmarking carrier economics across lanes and geographies, and building the analytical case for carrier mix decisions and contract negotiations.
+
+- Conduct supply chain analysis including inbound flow modeling, FC throughput and capacity analysis, and demand-driven network planning inputs to support inventory positioning and FC capacity planning.
+
+- Support network and location analysis to evaluate fulfillment center and sort center placement, injection point optimization, and the cost impact of serving different geographies from different nodes—helping us understand where to route volume to minimize transportation cost while maintaining service commitments.
+
+- Build reporting and business intelligence for carrier ops managers and transportation leadership—translating complex operational data into clear dashboards covering OTD, TNT performance, trailer utilization, and lane-level economics.
+
+- Drive cross-functional transportation initiatives as a project lead: defining scope, aligning stakeholders across carrier ops, engineering, finance, and commercial teams, and managing workstreams from analysis through implementation.
+
+- Produce competitive and strategic analysis on how Flexport's transportation network and product compare to the market—including how peers productize services like zone skipping—and build the analytical case for strategic shifts in our commercial offering.
+
+- Team Mentorship: Act as a technical and domain mentor, helping scale team capabilities in SQL best practices, data modeling frameworks, AI usage and effective stakeholder communication.
+
+You Should Have
+
+- 3–6 years of experience in supply chain analytics, transportation strategy, network design, or a closely related analytical role.
+
+- Strong quantitative skills—you're comfortable building financial models, running scenario analysis, and designing simulations that inform network or operational decisions.
+
+- Proficiency in SQL; experience querying large operational datasets in tools like Snowflake, Redshift, or BigQuery.
+
+- Advanced Data Visualization: Strong proficiency with BI and data visualization tools (e.g., Tableau, Looker, PowerBI) to build automated, executive-ready dashboards. Experience with Python or R for predictive modeling is a plus.
+
+- Experience with transportation or supply chain economics: shipping cost structures, carrier rate cards, zone-based pricing, network cost modeling, or equivalent.
+
+- Supply chain or network economics—you have a solid understanding of freight procurement frameworks, carrier bid structures, or data-driven RFP evaluation models.
+
+- A track record of translating complex, multi-source data into clear recommendations that leadership actually acts on.
+
+- Strong project management instincts—you can own an analytical initiative end-to-end, drive cross-functional alignment, and deliver without needing close direction.
+
+- Excellent communication skills; you can present nuanced quantitative analysis simply and confidently to senior operational and commercial audiences.
+
+- Experience working in highly ambiguous operational environments—you're comfortable navigating fragmented or incomplete datasets and confidently making data-driven recommendations.
+
+Bonus Points
+
+- Experience with zone skip, middle mile, parcel carrier networks, or last mile logistics.
+
+- Familiarity with rate shopping logic, fulfillment network simulation, or carrier rate card structures.
+
+- Python or R skills for advanced modeling, automation, or data pipeline work.
+
+- Background at a 3PL, e-commerce fulfillment company, carrier, or supply chain consulting firm.
+
+- Experience with BI tools such as Metabase, Looker, or Tableau for operational reporting.
+
+- Exposure to location optimization or facility network modeling.
+
+#LI-TM1
+
+The range displayed on each job posting reflects the minimum and maximum target for new hire base salary for the position in the posting's respective region. Our salary ranges are determined by role, level, and location. Within the range displayed, individual pay is determined by work location and additional factors, including job-related skills, experience, and relevant education and / or training. Base salary is just one part of our total rewards package at Flexport, which also includes bonus, equity, and comprehensive benefit offerings such as medical, dental, and flexible time off.
+
+The US base salary range for this position (this does not include bonus, equity and benefits):
+
+$74,560—$111,840 USD
+
+At Flexport, our ability to fulfill our mission of making global commerce easy and accessible relies on having a diverse, dedicated and engaged workforce. All qualified applicants will receive consideration for employment regardless of race, color, religion, sex, national origin, age, physical and mental disability, health status, marital and family status, sexual orientation, gender identity and expression, military and veteran status, and any other characteristic protected by applicable law.

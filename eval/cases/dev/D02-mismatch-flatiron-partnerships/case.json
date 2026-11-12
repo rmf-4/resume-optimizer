@@ -1,0 +1,14 @@
+{
+  "id": "D02-mismatch-flatiron-partnerships",
+  "category": "clear_mismatch",
+  "resume": "eval/resumes/avery-quillstone-supply-chain.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/flatironhealth/jobs/8122311",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Supply chain analyst resume against a biopharma partnerships role asking for client-facing biopharma sales experience and oncology exposure. Tests how the agent handles domain-specific must-haves from a different field than the resume.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/flatironhealth/jobs/8122311?questions=true",
+  "company": "Flatiron Health"
+}

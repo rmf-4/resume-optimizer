@@ -1,0 +1,18 @@
+Jules Penhallow
+Payment Operations Specialist
+Salt Lake City, UT | jules.penhallow@example.com | 412-555-0110
+Work Experience
+Tri-County Community Bank | Payment Operations Specialist | 2022 - Present
+• Worked the ACH exceptions queue each day, handling returns and notifications of change by Nacha return code
+• Released outgoing domestic wires after verifying callbacks under dual-control procedures
+• Reconciled daily ACH and wire settlement accounts and resolved breaks with Accounting
+• Answered escalated customer cases about returned payments in Salesforce
+• Wrote 6 SOPs for return handling and trained 4 new team members on them
+• Wrote SQL queries to pull a daily list of unresolved exceptions for the operations manager
+• Spotted a rise in unauthorized-debit returns and escalated it to the fraud team with account examples
+Tri-County Community Bank | Teller | 2020 - 2022
+• Processed deposits, withdrawals and cashier's checks for branch customers
+Education
+BS Finance, State University, 2020
+Skills
+ACH and Nacha rules, domestic wires, Salesforce, SQL (basic), Excel, bank payment portals

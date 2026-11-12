@@ -1,0 +1,3 @@
+Coach notes on Wren:
+- Wren has been reading SEC and FINRA guidance independently to prepare for a move into financial services compliance, but has not worked under those rules.
+- Wren used Jira daily on the appeals tracking project and built its intake workflow.

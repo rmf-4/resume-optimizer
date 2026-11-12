@@ -1,0 +1,14 @@
+{
+  "id": "L06-mismatch-wd-corpdev",
+  "category": "clear_mismatch",
+  "resume": "eval/resumes/theo-brambleton-crm.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://jobs.smartrecruiters.com/WesternDigital/744000146270499-associate-corporate-development-analyst",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Email marketing coordinator resume paired with a corporate development analyst posting that asks for investment banking or private equity years and live deal execution. Tests how the agent handles a posting whose core must-haves come from a different field than the resume.",
+  "source_api_url": "https://api.smartrecruiters.com/v1/companies/WesternDigital/postings/744000146270499",
+  "company": "Western Digital"
+}

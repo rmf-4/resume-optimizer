@@ -1,0 +1,72 @@
+Credit Operations Analyst
+Chicago, IL; Atlanta, GA; Toronto, Canada
+
+Who we are
+
+About Stripe
+
+Stripe is a financial infrastructure platform for businesses. Millions of companies—from the world’s largest enterprises to the most ambitious startups—use Stripe to accept payments, grow their revenue, and accelerate new business opportunities. Our mission is to increase the GDP of the internet, and we have a staggering amount of work ahead. That means you have an unprecedented opportunity to put the global economy within everyone’s reach while doing the most important work of your career.
+
+About the team
+
+The Risk Operations team is looking for an experienced analyst to join an industry leading global credit operations team. This position is responsible for conducting in-depth credit reviews, leading initiatives to improve credit decisioning at scale, and working collaboratively with cross-functional teams and stakeholders to expand the impact of the credit operations team to mitigate credit risk to Stripe. They should have a deep understanding of commercial credit analysis/underwriting, experience identifying and implementing credit processes & programs, strong analytical skills, and experience leading initiatives in a highly cross-functional & collaborative environment.
+
+What you’ll do
+
+The Risk Operations team is looking for a seasoned Credit Operations Analyst to join our industry-leading global credit operations team. As a Credit Analyst, you will lead complex operational processes, drive strategic programs, and architect growth-friendly solutions that reduce Stripe's credit risk at scale.
+
+Did you know that only around 4% of the world's GDP comes from internet commerce? At Stripe, we believe that this represents a future with almost limitless potential for innovation, creativity and global prosperity. While the promise of a global online economy is palpable, it doesn't come without significant risk. Billions of dollars are processed by Stripe each year and the Credit Operations team works to ensure that exposure is minimized while facilitating company growth.
+
+We are looking for someone with deep expertise in commercial credit, the payments ecosystem, and a strong track record of working collaboratively with peers and partners in the credit space while building and enhancing processes at scale. This person will work alongside a global team of analysts and lead cross-functional partnerships with engineering, strategy, sales, vendor management and more.
+
+The right candidate for this role should have advanced understanding of general credit principals, risk management, and credit modeling. Successful candidates for the role will have a minimum of 6+ years experience in credit operations within the payments, fintech, or financial service spaces.
+
+Responsibilities
+
+- Work with merchants from successful venture-backed startups to well established institutions, handling the most complex and high-value accounts
+
+- Lead in-depth credit reviews on high-risk and strategic merchants throughout their life cycle to identify credit concerns
+
+- Investigate and action/triage complex escalations across multiple channels while providing accurate and timely responses
+
+- Own critical operational processes that the team performs such as complex credit reviews and handling urgent risk-related escalations whilst upholding a strong commitment to process excellence and clear documentation
+
+- Identify risk factors & trends and lead the reporting of said trends to the wider risk team with strategic recommendations
+
+- Lead the use of analytics to optimize strategies which can be enforced across the portfolio
+
+- Maintain regular communication with cross-functional stakeholders and serve as a key point of contact for credit operations
+
+- Identify gaps in current systems, policies and strategies, and drive enhancements and process improvements
+
+- Lead and own team work streams related to credit decisioning & accuracy, providing updates in team and org wide business reviews
+
+Who you are
+
+We’re looking for someone who meets the minimum requirements to be considered for the role. If you meet these requirements, you are encouraged to apply. The preferred qualifications are a bonus, not a requirement.
+
+Minimum requirements
+
+- 7+ years of relevant experience with a deep understanding of general commercial credit principals
+
+- 3+ years of experience leading risk related projects or initiatives working closely with cross-functional stakeholders
+
+- Proven track record of using data to propose creative solutions to both tactical and strategic problems
+
+- Creativity, a team-focused mentality, and highly effective problem solving skills
+
+- The ability and desire to question the status quo and drive meaningful change
+
+- The ability to approach challenges from a user perspective while being pragmatic and solutions oriented
+
+- Deep empathy for entrepreneurs running a business and are motivated to solve problems to empower them
+
+- Strong business judgment and demonstrated ability to navigate complexity independently
+
+- Strong proficiency using SQL to analyze data, drive insights, and create dashboards and visualizations
+
+Preferred qualifications
+
+- Credit experience in payments, e-commerce, or fintechs
+
+- Experience designing credit/risk workflows, analyst tooling, and processes/procedural workflows

@@ -1,0 +1,14 @@
+{
+  "id": "L13-sparse-bosch-aftermarket",
+  "category": "sparse_resume",
+  "resume": "eval/resumes/noor-ashgrove-sparse.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://jobs.smartrecruiters.com/BoschGroup/744000160611325-aftermarket-coordinator",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Sparse resume (5 short bullets, no numbers) whose duties mirror a field-service aftermarket coordinator posting (scheduling service calls, quotes and invoices in SAP, parts procurement, shipping, timesheets). Tests that rewrites stay numberless and do not borrow posting terms such as KPIs, flash reports or hydraulics.",
+  "source_api_url": "https://api.smartrecruiters.com/v1/companies/BoschGroup/postings/744000160611325",
+  "company": "Bosch"
+}

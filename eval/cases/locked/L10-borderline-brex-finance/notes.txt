@@ -1,0 +1,3 @@
+Coach notes on Marisol:
+- Marisol uses ChatGPT every week to draft variance commentary and Excel formulas, and checks each output against the source numbers.
+- Last year Marisol built a payback analysis for a proposed increase in sales headcount; leadership approved part of the request.

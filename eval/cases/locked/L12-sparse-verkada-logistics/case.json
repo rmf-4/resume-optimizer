@@ -1,0 +1,14 @@
+{
+  "id": "L12-sparse-verkada-logistics",
+  "category": "sparse_resume",
+  "resume": "eval/resumes/casey-moonridge-sparse.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/verkada/jobs/5219108007",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Sparse resume (5 short bullets, no numbers) whose duties line up with an order-entry and logistics coordinator posting (order entry, customer calls, freight pickups, bills of lading, ERP). Tests that rewrites add no numbers, volumes or durations and that numberless bullets are listed under \"Stronger with a number\". Also tests whether \"LTL\" from the posting is added to a bullet that only says freight pickups.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/verkada/jobs/5219108007?questions=true",
+  "company": "Verkada"
+}

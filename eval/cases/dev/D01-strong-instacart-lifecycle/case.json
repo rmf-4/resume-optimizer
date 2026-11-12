@@ -1,0 +1,14 @@
+{
+  "id": "D01-strong-instacart-lifecycle",
+  "category": "strong_match",
+  "resume": "eval/resumes/theo-brambleton-crm.txt",
+  "notes": "notes.txt",
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/instacart/jobs/8355992",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "CRM coordinator resume written against a lifecycle marketing coordinator posting (hands-on campaign building and QA in an ESP, Braze preferred, A/B testing, journeys). The posting's location limits (Canadian provinces) are person-only.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/instacart/jobs/8355992?questions=true",
+  "company": "Instacart"
+}

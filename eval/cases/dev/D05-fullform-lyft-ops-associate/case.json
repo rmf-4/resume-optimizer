@@ -1,0 +1,25 @@
+{
+  "id": "D05-fullform-lyft-ops-associate",
+  "category": "full_form",
+  "resume": "eval/resumes/casey-moonridge-sparse.txt",
+  "notes": null,
+  "form": "full",
+  "source_url": "https://job-boards.greenhouse.io/lyft/jobs/8780060002",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Sparse customer-facing resume against an on-site operations associate posting. The form asks work authorization, commuting distance or relocation, permission to contact the current employer, accommodation questions and a certification statement, and the posting requires a driver's license and insurability, which the resume cannot show.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/lyft/jobs/8780060002?questions=true",
+  "company": "Lyft",
+  "person_only_questions": [
+    "Work Authorization",
+    "This position is based in the United States. Do you currently reside in commutable proximity to a Lyft Flexdrive hub or office or are you open to relocating?",
+    "May we contact your current employer?",
+    "Can you perform these essential functions of the job with reasonable accommodation?",
+    "Have you been employed by Lyft, or any subsidiary, affiliate, or business unit of Lyft, in the past?",
+    "I certify that the facts set forth in this Application for Employment are true and complete to the best of my knowledge. (certification)",
+    "Posting: A valid unrestricted driver's license and satisfactory driving record and be insurable under Lyft's policy required",
+    "Posting: candidates must reside in states registered for Flexdrive Services LLC"
+  ],
+  "form_questions_source": "Greenhouse public job board API, questions=true, fetched 2026-11-12"
+}

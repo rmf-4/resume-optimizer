@@ -1,0 +1,14 @@
+{
+  "id": "L03-strong-stripe-sales-data",
+  "category": "strong_match",
+  "resume": "eval/resumes/dmitri-holloway-pike-sales-data.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/stripe/jobs/8354566",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Sales-operations data analyst resume written against a sales strategy and operations data analyst posting (SQL, Salesforce, spreadsheet models, dashboards, business reviews, territory and quota planning). Tests evidence matching across many soft-skill requirements as well as tools.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/stripe/jobs/8354566?questions=true",
+  "company": "Stripe"
+}

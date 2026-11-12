@@ -1,0 +1,150 @@
+Project Coordinator, Professional Services
+Hybrid
+
+About Us
+
+At Cloudflare, we are on a mission to help build a better Internet. Today the company runs one of the world’s largest networks that powers millions of websites and other Internet properties for customers ranging from individual bloggers to SMBs to Fortune 500 companies. Cloudflare protects and accelerates any Internet application online without adding hardware, installing software, or changing a line of code. Internet properties powered by Cloudflare all have web traffic routed through its intelligent global network, which gets smarter with every request. As a result, they see significant improvement in performance and a decrease in spam and other attacks. Cloudflare was named to Entrepreneur Magazine’s Top Company Cultures list and ranked among the World’s Most Innovative Companies by Fast Company.
+
+At Cloudflare, we’re not looking for people who wait for a polished roadmap; we’re looking for the builders who see the cracks in the Internet that everyone else has simply learned to live with. We value candidates who have the instinct to spot a "normalized" problem and the AI-native curiosity to create a solution using the latest tools. Our culture is built on iteration, leveraging AI to ship faster today to make it better tomorrow, while ensuring that every improvement, no matter how small, is shared across the team to lift everyone up. If you’re the type of person who values curiosity over bureaucracy, and that AI is a partner in solving tough problems to keep the Internet moving forward, you’ll fit right in.
+
+Available Location: Austin, TX
+
+About the role
+
+We are looking for a proactive, highly organized Project Coordinator to join our Professional Services team. In this role, you'll own a portfolio of small- to medium-sized customer engagements and manage scope, budget, timeline, and deliverables from kickoff through closeout. You'll also be a key partner in resource coordination, working with Professional Services managers and project managers to staff engagements with the right people at the right time. As a day-to-day point of contact for both customers and internal delivery teams, you'll keep everyone aligned so that our cybersecurity and networking solutions are delivered smoothly and meet agreed-upon success criteria.
+
+The ideal candidate has experience in professional services, consulting, or a similar delivery role at a SaaS or cloud technology company. They take initiative, follow through on commitments, and collaborate effectively across teams. We believe that putting our people first and building a creative, exciting, and stimulating environment is essential to achieving our commercial goals.
+
+Responsibilities
+
+- Own a portfolio of small- to medium-sized Professional Services engagements, managing the full project lifecycle—from leading kickoffs and status meetings to overseeing scope, timeline, budget, and final deliverables.
+
+- Serve as the primary customer-facing point of contact by coordinating meetings, customer reporting, and stakeholder calls, ensuring all parties remain informed, aligned, and confident in project delivery.
+
+- Partner with leadership to coordinate resource assignments, evaluating project requirements against team skills and availability to maximize utilization and balance workloads.
+
+- Align internal technical resources, partners, and customers to keep tasks, milestones, and project dependencies on track.
+
+- Maintain rigorous project hygiene within PSA tooling, ensuring status updates, financials, and resource forecasts remain accurate while proactively managing scope changes.
+
+- Anticipate future resource demands by tracking project pipelines and identifying talent gaps or bottlenecks to advise leadership on hiring or cross-training initiatives.
+
+- Leverage AI tools to streamline status reporting, meeting summaries, and documentation, boosting efficiency and portfolio visibility.
+
+Desired Skills
+
+- Project Coordination: Strong grasp of project management fundamentals, able to manage several concurrent engagements without losing sight of details or deadlines.
+
+- Resource Coordination: Deep understanding of capacity, availability, skills matching, and utilization, partnering with managers to balance staffing across projects.
+
+- Capacity Forecasting: Track project pipelines to forecast resource needs, proactively identifying talent gaps and bottlenecks to guide cross-training and allocation strategies.
+
+- Proactivity and Ownership: Self-starter mindset, consistently taking initiative, anticipating needs, and following through without being asked.
+
+- Customer-Facing Communication: Clear and professional communicator, confident in leading customer meetings and proactively managing expectations.
+
+- Cross-Functional Collaboration: Proven ability to build strong relationships and keep multiple teams aligned on shared goals.
+
+- AI-Enabled Efficiency: Comfort using AI tools responsibly to optimize workflows, reduce manual work, and improve team productivity.
+
+- Technical Curiosity: Familiarity with, or eagerness to learn about, networking, security, and Cloudflare’s products and services.
+
+Experience
+
+- 2–4 years of experience in project coordination, project management, or resource management, ideally in professional services or a SaaS or cloud technology environment.
+
+- Hands-on experience with PSA tools such as Certinia, Kantata, or similar platforms.
+
+- Working knowledge of Salesforce, Jira, Google Workspace, and Confluence.
+
+- Bachelor's degree in a relevant field, or equivalent practical experience.
+
+- CAPM, PMP, or Agile certification is a plus, as is fluency in more than one language.
+
+Compensation
+
+Compensation may be adjusted depending on work location. This role is eligible to earn incentive compensation under Cloudflare’s Sales Compensation Plan.
+
+Equity
+
+This role is eligible to participate in Cloudflare’s equity plan.
+
+Benefits
+
+Cloudflare offers a complete package of benefits and programs to support you and your family. Our benefits programs can help you pay health care expenses, support caregiving, build capital for the future and make life a little easier and fun! The below is a description of our benefits for employees in the United States, and benefits may vary for employees based outside the U.S.
+
+Health & Welfare Benefits
+
+- Medical/Rx Insurance
+
+-
+
+Dental Insurance
+
+-
+
+Vision Insurance
+
+-
+
+Flexible Spending Accounts
+
+-
+
+Commuter Spending Accounts
+
+-
+
+Fertility & Family Forming Benefits
+
+-
+
+On-demand mental health support and Employee Assistance Program
+
+-
+
+Global Travel Medical Insurance
+
+Financial Benefits
+
+-
+
+Short and Long Term Disability Insurance
+
+-
+
+Life & Accident Insurance
+
+-
+
+401(k) Retirement Savings Plan
+
+-
+
+Employee Stock Participation Plan
+
+Time Off
+
+-
+
+Flexible paid time off covering vacation and sick leave
+
+-
+
+Leave programs, including parental, pregnancy health, medical, and bereavement leave
+
+What Makes Cloudflare Special?
+
+We’re not just a highly ambitious, large-scale technology company. We’re a highly ambitious, large-scale technology company with a soul. Fundamental to our mission to help build a better Internet is protecting the free and open Internet.
+
+Project Galileo: Since 2014, we've equipped more than 2,400 journalism and civil society organizations in 111 countries with powerful tools to defend themselves against attacks that would otherwise censor their work, technology already used by Cloudflare’s enterprise customers--at no cost.
+
+Athenian Project: In 2017, we created the Athenian Project to ensure that state and local governments have the highest level of protection and reliability for free, so that their constituents have access to election information and voter registration. Since the project, we've provided services to more than 425 local government election websites in 33 states.
+
+1.1.1.1: We released 1.1.1.1 to help fix the foundation of the Internet by building a faster, more secure and privacy-centric public DNS resolver. This is available publicly for everyone to use - it is the first consumer-focused service Cloudflare has ever released. Here’s the deal - we don’t store client IP addresses never, ever. We will continue to abide by our privacy commitment and ensure that no user data is sold to advertisers or used to target consumers.
+
+Sound like something you’d like to be a part of? We’d love to hear from you!
+
+Please note that applicants who progress to the offer stage of the interview process may be asked to attend an in-person interview within one of the Cloudflare Offices or Cloudflare Hubs. More details about this will be available at that stage of the interview process.
+
+This position may require access to information protected under U.S. export control laws, including the U.S. Export Administration Regulations. Please note that any offer of employment may be conditioned on your authorization to receive software or technology controlled under these U.S. export laws without sponsorship for an export license.

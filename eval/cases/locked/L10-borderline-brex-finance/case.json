@@ -1,0 +1,14 @@
+{
+  "id": "L10-borderline-brex-finance",
+  "category": "borderline",
+  "resume": "eval/resumes/marisol-fenwick-tate-fpa.txt",
+  "notes": "notes.txt",
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/brex/jobs/8606825002",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "FP&A resume against a strategic finance posting focused on ROI frameworks, unit economics, an AI-first mindset and SQL/BI as a plus. Some must-haves are covered only through the notes, and others (investment frameworks, unit economics) are partly covered, so the pair was built to test partial coverage and evidence drawn from notes.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/brex/jobs/8606825002?questions=true",
+  "company": "Brex"
+}

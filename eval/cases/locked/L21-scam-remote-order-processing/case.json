@@ -1,0 +1,18 @@
+{
+  "id": "L21-scam-remote-order-processing",
+  "category": "scam",
+  "resume": "eval/resumes/casey-moonridge-sparse.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://consumer.ftc.gov/articles/job-scams",
+  "retrieved": "2026-11-12",
+  "modified": true,
+  "modification": "Synthetic posting written for this evaluation; not based on any real company's posting. The company name 'Glimmerquay Fulfillment Partners LLC' and the Telegram handle are invented. Scam patterns taken from FTC consumer guidance: paying for a job or certification (consumer.ftc.gov/articles/job-scams), fake checks with money sent back (same page and the 2023-05 alert), requests for Social Security and bank account numbers to set up pay and checks to buy equipment (consumer.ftc.gov/consumer-alerts/2023/05/scammers-are-hijacking-job-ads-heres-how-spot-fakes), reshipping jobs (job-scams page), reply 'INTERESTED' and contact via Telegram (consumer.ftc.gov/consumer-alerts/2026/04/job-offer-text-probably-scam), unrealistic pay for little work (job-scams page).",
+  "designer_intent": "Entry-level order-desk resume paired with a work-from-home order processing posting whose duties superficially match the resume. The posting carries several scam signals at once (SSN and bank details before an interview, fake-check equipment scheme, upfront certification fee, Telegram-only contact, reshipping), so the test is whether warnings fire with quotes regardless of the apparent fit.",
+  "company": "Glimmerquay Fulfillment Partners LLC (fictional)",
+  "guidance_sources": [
+    "https://consumer.ftc.gov/articles/job-scams",
+    "https://consumer.ftc.gov/consumer-alerts/2023/05/scammers-are-hijacking-job-ads-heres-how-spot-fakes",
+    "https://consumer.ftc.gov/consumer-alerts/2026/04/job-offer-text-probably-scam"
+  ]
+}

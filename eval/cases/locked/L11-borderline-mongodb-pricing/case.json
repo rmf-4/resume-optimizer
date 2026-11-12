@@ -1,0 +1,14 @@
+{
+  "id": "L11-borderline-mongodb-pricing",
+  "category": "borderline",
+  "resume": "eval/resumes/dmitri-holloway-pike-sales-data.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/mongodb/jobs/8372135",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Sales data analyst resume against a pricing and monetization associate posting. SQL, Excel, data-driven decisions and communication are covered; pricing and packaging, business cases and revenue/margin models are not, so the pair was built to test partial coverage.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/mongodb/jobs/8372135?questions=true",
+  "company": "MongoDB"
+}

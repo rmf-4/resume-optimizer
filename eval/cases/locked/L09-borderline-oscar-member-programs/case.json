@@ -1,0 +1,14 @@
+{
+  "id": "L09-borderline-oscar-member-programs",
+  "category": "borderline",
+  "resume": "eval/resumes/wren-calloway-finch-health-ops.txt",
+  "notes": "notes.txt",
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/oscar/jobs/8303620",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Health-plan operations resume against a program management posting in the same industry. The posting asks for years of program management; the resume and notes show one coordinated project, a led project in the notes, and contact center exposure, so how much of that counts is a judgment call.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/oscar/jobs/8303620?questions=true",
+  "company": "Oscar Health"
+}

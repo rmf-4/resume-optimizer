@@ -1,0 +1,20 @@
+Avery Quillstone
+Supply Chain Analyst
+Pittsburgh, PA | avery.quillstone@example.com | 412-555-0101
+Work Experience
+Harborline Grocery Distribution | Supply Chain Analyst | 2023 - Present
+• Wrote SQL queries against the warehouse management database to track inventory shrink and spoilage across 4 distribution centers
+• Built a Tableau dashboard of inbound freight cost per case that the logistics director reviews every week
+• Audited carrier invoices and found $310,000 in annual freight overcharges, which the accounts payable team recovered from carriers
+• Reworked the replenishment process for slow-moving items with the vendor management and category teams, reducing excess inventory by 12%
+• Documented standard operating procedures for receiving and cycle counts at two sites
+• Used ChatGPT and Claude to draft first versions of SOPs and to explain unfamiliar SQL, then checked the output with the operations lead
+Harborline Grocery Distribution | Operations Intern | 2022
+• Mapped the order-to-delivery process for 2 stores and presented the main bottlenecks to the regional operations manager
+Projects
+Freight Cost Model, capstone project | 2023
+• Built an Excel model comparing truckload and LTL costs for a regional retailer across 30 shipping lanes
+Education
+BS Business Administration, Supply Chain Management, State University, 2023
+Skills
+SQL, Tableau, Excel (pivot tables, Power Query), NetSuite, process mapping, ChatGPT, Claude

@@ -1,0 +1,14 @@
+{
+  "id": "D03-borderline-cloudflare-infra-bizops",
+  "category": "borderline",
+  "resume": "eval/resumes/beckett-thornquist-transportation.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/cloudflare/jobs/8278383",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Transportation analyst resume against an infrastructure business operations posting. Margin analysis, models and executive communication overlap; infrastructure, deal economics, SQL and AI use do not, so the pair was built to test partial coverage.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/cloudflare/jobs/8278383?questions=true",
+  "company": "Cloudflare"
+}

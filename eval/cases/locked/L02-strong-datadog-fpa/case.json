@@ -1,0 +1,14 @@
+{
+  "id": "L02-strong-datadog-fpa",
+  "category": "strong_match",
+  "resume": "eval/resumes/marisol-fenwick-tate-fpa.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/datadog/jobs/8312438",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "FP&A resume aligned to a GTM FP&A posting (budget vs. actual, headcount planning, bookings and retention analysis, Excel and PowerPoint models). Tests tailoring on a well-aligned pair where the posting's bonus items (Pigment, AI tools) are absent from the resume.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/datadog/jobs/8312438?questions=true",
+  "company": "Datadog"
+}

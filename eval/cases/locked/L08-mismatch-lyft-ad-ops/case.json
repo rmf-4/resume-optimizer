@@ -1,0 +1,14 @@
+{
+  "id": "L08-mismatch-lyft-ad-ops",
+  "category": "clear_mismatch",
+  "resume": "eval/resumes/beckett-thornquist-transportation.txt",
+  "notes": null,
+  "form": "simple",
+  "source_url": "https://job-boards.greenhouse.io/lyft/jobs/8927244002",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Transportation analyst resume paired with a digital ad operations coordinator posting that asks for AdTech campaign experience, ad servers and DSP/SSP platforms. Shared generic words (analytics, reporting, Google Sheets-style tools) test whether loose evidence is accepted.",
+  "source_api_url": "https://boards-api.greenhouse.io/v1/boards/lyft/jobs/8927244002?questions=true",
+  "company": "Lyft"
+}

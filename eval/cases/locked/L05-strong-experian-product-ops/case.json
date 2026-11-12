@@ -1,0 +1,14 @@
+{
+  "id": "L05-strong-experian-product-ops",
+  "category": "strong_match",
+  "resume": "eval/resumes/priya-lanternfield-project-coord.txt",
+  "notes": "notes.txt",
+  "form": "simple",
+  "source_url": "https://jobs.smartrecruiters.com/Experian/744000159641657-product-operations-coordinator-customer-programs",
+  "retrieved": "2026-11-12",
+  "modified": false,
+  "modification": null,
+  "designer_intent": "Project coordinator resume written against a product operations coordinator posting for customer programs (advisory boards, multiple programs, customer communication, Jira/Salesforce/Confluence). Travel and hub residence in the posting are person-only items; the notes say the client is open to travel.",
+  "source_api_url": "https://api.smartrecruiters.com/v1/companies/Experian/postings/744000159641657",
+  "company": "Experian"
+}
