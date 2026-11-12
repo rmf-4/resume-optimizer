@@ -147,3 +147,29 @@ describe("new_skill scoped to gaps", () => {
     expect(run("Built an Excel model for 40 clients in Tableau", { gaps: [] }).map((f) => f.type)).toEqual(["new_number", "new_name"]);
   });
 });
+
+describe("words from met requirements are allowed", () => {
+  it("test_supported_requirement_words_exempt_from_new_skill", () => {
+    const gaps = ["Comfort with developer tools (e.g. git) and data visualization"];
+    // "visualization" is a gap word; with "data visualization" also met, it's allowed.
+    expect(run("Built an Excel model with data visualization", { gaps })).toContainEqual({ type: "new_skill", text: "visualization" });
+    expect(run("Built an Excel model with data visualization", { gaps, supported: ["Experience with data visualization"] })).toEqual([]);
+  });
+});
+
+describe("self_praise", () => {
+  it("test_self_praise_flagged_unless_original_uses_it", () => {
+    expect(run("Cut monthly reconciliation time by 6 hours with strong judgment and an Excel model")).toContainEqual({ type: "self_praise", text: "strong" });
+    expect(run("Clearly presented supply chain findings", { baseline: "Presented supply chain findings" })).toContainEqual({ type: "self_praise", text: "Clearly" });
+    expect(run("Successfully built an Excel model", { baseline: "Successfully built an Excel model in 2021" }).map((f) => f.type)).not.toContain("self_praise");
+  });
+});
+
+describe("everyday verbs in every form", () => {
+  it("test_apply_family_never_counts_as_new_skill", () => {
+    const gaps = ["Demonstrated experience using AI tools and applying effective prompting skills."];
+    for (const v of ["Applied", "applying", "applies"]) {
+      expect(run(`${v} an Excel model to cut reconciliation time by 6 hours`, { gaps }).map((f) => f.type)).not.toContain("new_skill");
+    }
+  });
+});

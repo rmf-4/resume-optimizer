@@ -76,7 +76,7 @@ export function simulateDecide(ctx: DecideContext): { requirements: Requirement[
       if (quote.length < 3) continue;
       const kind = PERSON.test(quote) ? "person" : CREDENTIAL.test(quote) ? "credential" : "skill";
       const priority = section === "pref" || NICE.test(quote) ? "nice" : "must";
-      requirements.push({ quote, priority, kind, evidence: kind === "person" ? [] : evidenceFor(quote, sourceLines) });
+      requirements.push({ quote, priority, kind, evidence: kind === "person" ? [] : evidenceFor(quote, sourceLines), key_terms: [] });
     }
   }
   return { requirements };
@@ -91,13 +91,17 @@ const WEAK_OPENINGS: Array<[RegExp, string]> = [
 ];
 
 /** Rewrites only weak openings, adding nothing else, so the checker has something to pass or catch. */
-export function simulateTailor(ctx: TailorContext): { rewrites: { bullet_id: number; text: string }[]; lead_bullet_ids: number[] } {
+export function simulateTailor(ctx: TailorContext): {
+  rewrites: { bullet_id: number; text: string }[];
+  lead_bullet_ids: number[];
+  skill_line_orders: { line_id: number; order: number[] }[];
+} {
   const rewrites: { bullet_id: number; text: string }[] = [];
   for (const b of ctx.bullets) {
     const hit = WEAK_OPENINGS.find(([re]) => re.test(b.text));
     if (hit) rewrites.push({ bullet_id: b.id, text: b.text.replace(hit[0], hit[1]) });
   }
-  return { rewrites, lead_bullet_ids: [] };
+  return { rewrites, lead_bullet_ids: [], skill_line_orders: [] };
 }
 
 export const simulatedModel: AgentModel = {

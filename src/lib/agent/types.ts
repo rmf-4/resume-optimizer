@@ -13,6 +13,8 @@ export type TailorContext = DecideContext & {
   supported: string[];
   /** Requirement quotes with no evidence: never to be claimed. */
   gaps: string[];
+  /** "Label: a, b, c" lines whose items may be reordered. */
+  skillLines?: { id: number; label: string; items: string[] }[];
 };
 
 export interface AgentModel {

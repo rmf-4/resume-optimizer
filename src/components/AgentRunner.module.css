@@ -169,3 +169,12 @@
   border-color: var(--accent);
   background: var(--note-bg);
 }
+
+.check {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  font-size: 0.9rem;
+}

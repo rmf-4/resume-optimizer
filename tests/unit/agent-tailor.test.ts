@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { check } from "@/lib/agent/check";
 import { runDecide, type DecideResult } from "@/lib/agent/run";
 import { simulatedModel } from "@/lib/agent/simulated";
-import { applyRewrites, assembleResume, bulletEntries, buildTailorPrompt, runTailor } from "@/lib/agent/tailor";
+import { applyRewrites, assembleResume, bulletEntries, buildTailorPrompt, echoReport, findSkillLines, runTailor } from "@/lib/agent/tailor";
+import { SAMPLE_RESUME } from "@/lib/agent/sample";
 import type { AgentModel } from "@/lib/agent/types";
 import type { ModelResult } from "@/lib/step1/types";
 import { findBullets } from "@/lib/text";
@@ -86,6 +87,99 @@ describe("REQ-AG-14 lead bullet per entry", () => {
     const entries = bulletEntries(twoRoles, b);
     expect(entries.get(1)).toBe("Sam Doe | EXPERIENCE | Acme | Analyst | 2020 – 2022");
     expect(entries.get(5)).toBe("Beta Co | Intern | 2019");
+  });
+});
+
+describe("REQ-AG-15 skills lines", () => {
+  const sampleBullets = findBullets(SAMPLE_RESUME);
+
+  it("test_skill_lines_found_with_items_kept_whole", () => {
+    const lines = findSkillLines(SAMPLE_RESUME);
+    expect(lines.map((l) => l.label)).toEqual(["Technical", "Operations", "Interests"]);
+    expect(lines[0].items).toEqual(["Excel (pivot tables, lookups)", "SQL", "Python (pandas)", "PowerPoint"]);
+    const withPeriod = findSkillLines("Name\nSKILLS\nTechnical: Python (numpy, pytest), SQL, Excel.");
+    expect(withPeriod[0]).toMatchObject({ items: ["Python (numpy, pytest)", "SQL", "Excel"], suffix: "." });
+  });
+
+  it("test_skill_line_reordered_with_same_items_only", () => {
+    const r = applyRewrites({
+      resume: SAMPLE_RESUME,
+      posting: JOB_DESCRIPTION,
+      bullets: sampleBullets,
+      keywords: [],
+      raw: { rewrites: [], lead_bullet_ids: [], skill_line_orders: [{ line_id: 1, order: [2, 1, 3, 4] }] },
+    });
+    expect(r.tailored).toContain("Technical: SQL, Excel (pivot tables, lookups), Python (pandas), PowerPoint");
+    expect(r.skillsReordered).toEqual([
+      {
+        lineId: 1,
+        label: "Technical",
+        before: "Technical: Excel (pivot tables, lookups), SQL, Python (pandas), PowerPoint",
+        after: "Technical: SQL, Excel (pivot tables, lookups), Python (pandas), PowerPoint",
+      },
+    ]);
+    // Every other line is untouched.
+    const a = SAMPLE_RESUME.split("\n");
+    r.tailored.split("\n").forEach((line, i) => {
+      if (!line.startsWith("Technical:")) expect(line).toBe(a[i]);
+    });
+  });
+
+  it("test_bad_skill_orders_ignored", () => {
+    const orders = [
+      { line_id: 1, order: [1, 1, 3, 4] }, // repeats an item
+      { line_id: 2, order: [2, 1, 3] }, // drops an item
+      { line_id: 3, order: [1, 2, 3, 4] }, // no change
+      { line_id: 9, order: [2, 1] }, // no such line
+    ];
+    const r = applyRewrites({ resume: SAMPLE_RESUME, posting: JOB_DESCRIPTION, bullets: sampleBullets, keywords: [], raw: { rewrites: [], skill_line_orders: orders } });
+    expect(r.tailored).toBe(SAMPLE_RESUME);
+    expect(r.counts.skillLinesReordered).toBe(0);
+  });
+});
+
+describe("posting words tied to evidence", () => {
+  const met = [
+    { quote: "Strong stakeholder management and cross-functional collaboration skills", evidence: ["Presented supply chain findings to senior managers each quarter"], keyTerms: ["stakeholder management"] },
+  ];
+
+  it("test_met_requirement_wording_off_its_evidence_bullet_is_flagged_for_review", () => {
+    const raw = {
+      rewrites: [
+        { bullet_id: 5, text: "Presented supply chain findings to senior managers each quarter, practicing stakeholder management" },
+        { bullet_id: 3, text: "Built an Excel model with stakeholder management that cut monthly reconciliation time by 6 hours" },
+      ],
+    };
+    const r = applyRewrites({ ...base, gaps: [], met, raw });
+    expect(r.kept.map((k) => k.bulletId)).toEqual([3, 5]);
+    // On its evidence bullet: no flag. On another bullet: kept, but the coach must confirm it.
+    expect(r.kept.find((k) => k.bulletId === 5)?.review).toBeUndefined();
+    expect(r.kept.find((k) => k.bulletId === 3)?.review).toEqual([{ text: "stakeholder", requirement: met[0].quote }]);
+    expect(r.counts.flaggedForReview).toBe(1);
+  });
+
+  it("test_first_person_rewrite_thrown_out", () => {
+    const r = applyRewrites({ ...base, gaps: [], met, raw: { rewrites: [{ bullet_id: 5, text: "Presented my supply chain findings to senior managers each quarter" }] } });
+    expect(r.reverted[0].reasons).toContainEqual({ type: "first_person", text: "my" });
+  });
+});
+
+describe("REQ-AG-23 posting-language coverage", () => {
+  it("test_echo_counts_key_terms", () => {
+    const reqs = [{ quote: "Some experience and familiarity with programming or data analysis, either through side projects or coursework", keyTerms: ["data analysis", "programming"] }];
+    const e = echoReport("• Analyzed sales trends", "• Applied data analysis to sales trends", reqs);
+    expect([e.before, e.after, e.total]).toEqual([0, 1, 1]);
+  });
+
+  it("test_echo_report_counts_met_requirements_in_posting_words", () => {
+    const supported = ["Advanced SQL and Excel", "Experience with demand forecasting"];
+    const before = "• Built an Excel model\n• Wrote queries";
+    const after = "• Built an Excel model\n• Wrote SQL queries for demand forecasting";
+    const e = echoReport(before, after, supported);
+    expect(e.total).toBe(2);
+    expect(e.before).toBe(0);
+    expect(e.after).toBe(2);
+    expect(e.requirements[0]).toEqual({ quote: "Advanced SQL and Excel", before: false, after: true });
   });
 });
 

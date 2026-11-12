@@ -12,6 +12,7 @@ export const FINDING_TYPES = [
   "new_contact",
   "new_skill",
   "scope_change",
+  "self_praise",
   "hidden_text",
 ] as const;
 
@@ -30,6 +31,11 @@ export type CheckInput = {
    * flags only words from these, not every word of the posting: long postings use most everyday words.
    */
   gaps?: string[];
+  /**
+   * Requirements the source facts do show. Their words never count as `new_skill`, even when a gap uses the
+   * same word: "data" is fine when the client meets "data analysis", whatever "data visualization" says.
+   */
+  supported?: string[];
   /** Text a leadership verb must already appear in: the original bullet plus the notes. Defaults to `source`. */
   baseline?: string;
 };
@@ -235,16 +241,37 @@ export function baseStem(word: string): string {
  * Everyday action verbs that rewording uses freely. They never count as a new skill on their own, even
  * when the posting uses them. Tools, nouns and skill terms are still checked ("dashboards", "forecasting").
  */
-const GENERIC_VERBS = new Set(
-  (
-    "achieve assist build collaborate communicate complete conduct contribute coordinate create deliver develop document " +
-    "enable engage ensure execute expand facilitate generate handle help identify implement improve increase maintain " +
-    "monitor organize partner perform plan prepare present produce provide reduce report resolve review run serve share " +
-    "streamline support track update work write make take find"
-  )
-    .split(" ")
-    .map((w) => stem(w)),
-);
+const GENERIC_VERB_BASES = (
+  "achieve apply assist build collaborate communicate complete conduct contribute coordinate create deliver develop document " +
+  "enable engage ensure execute expand facilitate generate handle help identify implement improve increase maintain " +
+  "monitor organize partner perform plan prepare present produce provide reduce report resolve review run serve share " +
+  "streamline support track update work write make take find"
+).split(" ");
+
+/** Every common form of each verb, stemmed, so stemmer quirks ("apply" vs "applying") can't split a family. */
+function verbForms(base: string): string[] {
+  const forms = [base, `${base}s`, `${base}ed`, `${base}ing`];
+  if (base.endsWith("y")) forms.push(`${base.slice(0, -1)}ies`, `${base.slice(0, -1)}ied`);
+  if (base.endsWith("e")) forms.push(`${base}d`, `${base.slice(0, -1)}ing`);
+  return forms;
+}
+
+const GENERIC_VERBS = new Set(GENERIC_VERB_BASES.flatMap(verbForms).map((w) => baseStem(w)));
+
+/**
+ * The distinctive words of a requirement, stemmed: no stopwords, no everyday action verbs, at least 3 letters.
+ * Used to measure how much of a posting's own wording a resume carries.
+ */
+export function contentStems(text: string): string[] {
+  return [
+    ...new Set(
+      tokenize(text)
+        .filter((w) => w.length >= 3 && /[a-z]/.test(w) && !STOPWORDS.has(w))
+        .map(baseStem)
+        .filter((st) => !GENERIC_VERBS.has(st)),
+    ),
+  ];
+}
 
 // ---------- scope ----------
 
@@ -267,6 +294,12 @@ const SCOPE_FAMILIES: string[][] = [
   ["pioneered", "pioneering"],
   ["championed", "championing"],
 ];
+
+// ---------- self-praise ----------
+
+/** Words that grade the client instead of stating what they did. Allowed only if the original already uses them. */
+const SELF_PRAISE =
+  /\b(?:strong(?:ly)?|excellent|exceptional(?:ly)?|outstanding|proven|passionate|passion|highly|expert(?:ise)?|innovative|visionary|dynamic|motivated|self-driven|self-starter|results-driven|detail-oriented|talented|skilled|successfully|effectively|clearly|seamlessly|world-class|best-in-class|judg(?:e)?ment|adept|savvy|exemplary)\b/gi;
 
 // ---------- hidden text ----------
 
@@ -330,7 +363,13 @@ export function check(input: CheckInput): Finding[] {
   // new_skill
   const claimText = input.gaps ? input.gaps.join("\n") : input.posting;
   if (claimText) {
-    const postingStems = new Set(tokenize(claimText).filter((w) => !STOPWORDS.has(w)).map(baseStem));
+    const supportedStems = new Set(tokenize((input.supported ?? []).join("\n")).map(baseStem));
+    const postingStems = new Set(
+      tokenize(claimText)
+        .filter((w) => !STOPWORDS.has(w))
+        .map(baseStem)
+        .filter((st) => !supportedStems.has(st)),
+    );
     const isNewSkill = (t: Token) => {
       const w = t.text.toLowerCase();
       const s = baseStem(w);
@@ -345,6 +384,12 @@ export function check(input: CheckInput): Finding[] {
     const w = t.text.toLowerCase();
     const family = SCOPE_FAMILIES.find((f) => f.includes(w));
     if (family && !family.some((form) => baselineStems.has(stem(form)))) add("scope_change", t.text, t.start);
+  }
+
+  // self_praise
+  const praiseBaseline = (input.baseline ?? source).toLowerCase();
+  for (const m of matchesOf(SELF_PRAISE, candidate)) {
+    if (!praiseBaseline.includes(m[0].toLowerCase())) add("self_praise", m[0], m.index);
   }
 
   const seen = new Set<string>();

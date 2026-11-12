@@ -35,6 +35,8 @@ const REVERT: Record<RevertType, string> = {
   new_contact: "adds contact details",
   new_skill: "claims something from the posting the facts don't show",
   scope_change: "makes the client's role sound bigger",
+  self_praise: "praises the client instead of stating what they did",
+  first_person: "is written in the first person",
   hidden_text: "contains hidden text",
   banned_opening: "starts with a weak opening",
   placeholder: "contains a placeholder",
@@ -485,12 +487,40 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
           <h2>Tailored resume</h2>
           {t.preparedAnyway && <p className={base.badge}>Prepared anyway</p>}
 
+          {t.echo.total > 0 && (
+            <>
+              <h3>Posting language</h3>
+              <p>
+                Of the {t.echo.total} requirements the client meets, the resume states{" "}
+                <strong>
+                  {t.echo.before} before → {t.echo.after} after
+                </strong>{" "}
+                in words the posting uses.
+              </p>
+              <p className={base.hint}>
+                A requirement counts when at least half its distinctive words appear. This shows whether the resume speaks the
+                posting&apos;s language. It isn&apos;t an ATS score or a chance of getting through.
+              </p>
+            </>
+          )}
+
           <h3>Rewrites kept ({t.kept.length})</h3>
           {t.kept.length === 0 && <p className={base.hint}>No bullet text changed for this job.</p>}
           {t.kept.map((k) => (
             <div key={k.bulletId} className={styles.pair}>
               <p className={styles.before}>{k.original}</p>
               <p className={styles.after}>{highlightNew(k.original, k.rewrite)}</p>
+              {k.review && (
+                <p className={styles.check}>
+                  Check this is true here:{" "}
+                  {k.review.map((r, i) => (
+                    <span key={i}>
+                      {i > 0 && "; "}&ldquo;{r.text}&rdquo; (from &ldquo;{r.requirement}&rdquo;, which the agent matched to a different part of the
+                      resume)
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
           ))}
 
@@ -503,6 +533,18 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
                   <li key={m.bulletId}>{m.text}</li>
                 ))}
               </ul>
+            </>
+          )}
+
+          {t.skillsReordered.length > 0 && (
+            <>
+              <h3>Skills put in this job&apos;s order ({t.skillsReordered.length})</h3>
+              {t.skillsReordered.map((r) => (
+                <div key={r.lineId} className={styles.pair}>
+                  <p className={styles.before}>{r.before}</p>
+                  <p className={styles.after}>{r.after}</p>
+                </div>
+              ))}
             </>
           )}
 
@@ -570,7 +612,7 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
             </p>
           )}
           <p className={styles.counts}>
-            Rewrites suggested {t.counts.requested} · kept {t.counts.kept} · thrown out {t.counts.reverted} · bullets moved {t.counts.moved}
+            Rewrites suggested {t.counts.requested} · kept {t.counts.kept} · thrown out {t.counts.reverted} · bullets moved {t.counts.moved} · skills lines reordered {t.counts.skillLinesReordered}
           </p>
         </section>
       )}

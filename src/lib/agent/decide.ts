@@ -9,18 +9,32 @@ import type { InputWarning } from "./warnings";
 export const PRIORITIES = ["must", "nice"] as const;
 export const REQUIREMENT_KINDS = ["skill", "credential", "person"] as const;
 
+const requirementShape = {
+  quote: z.string(),
+  priority: z.enum(PRIORITIES),
+  kind: z.enum(REQUIREMENT_KINDS),
+  evidence: z.array(z.string()),
+};
+
+/** What the model must return. */
 export const DecideOutputSchema = z.object({
   requirements: z.array(
     z.object({
-      quote: z.string(),
-      priority: z.enum(PRIORITIES),
-      kind: z.enum(REQUIREMENT_KINDS),
-      evidence: z.array(z.string()),
+      ...requirementShape,
+      /** 1 to 3 short terms from the quote a recruiter would search for, such as "SQL" or "data analysis". */
+      key_terms: z.array(z.string()),
     }),
   ),
 });
 
-export type Requirement = z.infer<typeof DecideOutputSchema>["requirements"][number];
+/** What code accepts: missing key terms just means none. */
+const LenientDecideSchema = z.object({
+  requirements: z.array(z.object({ ...requirementShape, key_terms: z.array(z.string()).default([]) })),
+});
+
+export type Requirement = z.infer<typeof LenientDecideSchema>["requirements"][number];
+
+const MAX_KEY_TERMS = 3;
 export type Decision = "apply" | "skip" | "needs_human";
 
 /** Comparison form for verbatim checks: case, whitespace, curly quotes, dashes and bullet markers don't count. */
@@ -53,7 +67,7 @@ type Validation =
  * Only a schema failure makes the output invalid (REQ-AG-21).
  */
 export function validateDecide(raw: unknown, ctx: DecideContext): Validation {
-  const parsed = DecideOutputSchema.safeParse(raw);
+  const parsed = LenientDecideSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, problems: ["output does not match the expected shape"] };
 
   const posting = normalizeQuote(ctx.posting);
@@ -79,7 +93,10 @@ export function validateDecide(raw: unknown, ctx: DecideContext): Validation {
       if (isVerbatim(ev, source)) evidence.push(ev);
       else discardedEvidence.push(ev);
     }
-    requirements.push({ quote, priority: r.priority, kind: r.kind, evidence: evidence.slice(0, MAX_EVIDENCE) });
+    // Key terms must be copied from the requirement's own quote.
+    const quoteNorm = normalizeQuote(quote);
+    const keyTerms = [...new Set(r.key_terms.map((k) => k.trim()).filter((k) => k && k.length <= 40 && isVerbatim(k, quoteNorm)))].slice(0, MAX_KEY_TERMS);
+    requirements.push({ quote, priority: r.priority, kind: r.kind, evidence: evidence.slice(0, MAX_EVIDENCE), key_terms: keyTerms });
   }
   return { ok: true, requirements, dropped, discardedEvidence };
 }

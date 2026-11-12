@@ -10,7 +10,7 @@ import type { ModelResult } from "@/lib/step1/types";
 import { JOB_DESCRIPTION, RESUME_TEXT } from "../helpers/fixtures";
 
 function req(quote: string, opts: Partial<Requirement> = {}): Requirement {
-  return { quote, priority: "must", kind: "skill", evidence: [], ...opts };
+  return { quote, priority: "must", kind: "skill", evidence: [], key_terms: [], ...opts };
 }
 
 /** `total` must-have skills, the first `supported` of which have evidence. */

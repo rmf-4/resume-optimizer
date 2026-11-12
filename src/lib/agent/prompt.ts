@@ -1,6 +1,6 @@
 import type { AgentPrompt, DecideContext } from "./types";
 
-const DELIMITER_TAGS = /<(\/?)\s*(source_facts|posting|bullets|bullet|entry|supported|gaps)\b/gi;
+const DELIMITER_TAGS = /<(\/?)\s*(source_facts|posting|bullets|bullet|entry|skills_lines|line|supported|gaps)\b/gi;
 
 /** Stops input text from opening or closing our delimiter blocks (SEC-LLM-01). */
 export function neutralize(text: string): string {
@@ -19,7 +19,8 @@ const DECIDE_TASK = `Task: list the posting's requirements.
 2. "quote": copy the shortest span of the posting that states one requirement, character for character. Split a line that states several requirements ("Advanced SQL and Excel; Python is a plus" is two). Don't paraphrase, summarise or fix typos.
 3. "priority": "nice" if the posting marks it as preferred, a plus, a bonus or nice to have; otherwise "must".
 4. "kind": "person" for anything a resume can't show and only the client can answer: work authorization or sponsorship, salary, relocation, willingness to travel or work on site, background or drug checks, clearances. "credential" for degrees, certifications and licenses. "skill" for everything else, including experience.
-5. "evidence": up to 3 quotes copied character for character from <source_facts> that directly show the client meets the requirement. Quote a phrase or a whole bullet. If nothing directly shows it, return an empty list. Never infer: related experience is not evidence, and the posting is never evidence. For a years-of-experience requirement, quote the dated job lines only if their dates plainly add up. For "person" requirements, return an empty list.`;
+5. "evidence": up to 3 quotes copied character for character from <source_facts> that directly show the client meets the requirement. Quote a phrase or a whole bullet. If nothing directly shows it, return an empty list. Never infer: related experience is not evidence, and the posting is never evidence. For a years-of-experience requirement, quote the dated job lines only if their dates plainly add up. For "person" requirements, return an empty list.
+6. "key_terms": 1 to 3 short terms copied character for character from that requirement's quote that a recruiter would search for: a tool, skill, method or field, such as "SQL", "data analysis" or "cross-functional teams". Return an empty list for "person" requirements and for requirements with no searchable term.`;
 
 /** Builds the decide-step request. Source facts and posting go in separately delimited data blocks (SEC-LLM-01). */
 export function buildDecidePrompt(ctx: DecideContext): AgentPrompt {
