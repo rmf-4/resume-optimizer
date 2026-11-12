@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import type { Packet } from "@/lib/agent/packetShape";
 import type { DecideResult } from "@/lib/agent/run";
 import type { TailorResult } from "@/lib/agent/tailor";
 import base from "../Analyzer.module.css";
 import styles from "../AgentRunner.module.css";
-import { ExportPanel, highlightNew, reasonsText } from "./shared";
+import { ExportPanel, highlightNew, postJson, reasonsText } from "./shared";
 
 export type Decide = Omit<DecideResult, "context">;
 export type RunResult = { mode: "ai" | "simulated"; decide: Decide; tailor: TailorResult | null; tailorError?: { code: string; message: string } };
@@ -227,5 +229,206 @@ export function JobResult(props: {
         </section>
       )}
     </>
+  );
+}
+
+export type LogEntryView = {
+  id: string;
+  at: string;
+  packetHash: string;
+  postingTitle: string;
+  level: 2 | 3;
+  approver: string;
+  form: "simple" | "full";
+  outcome: "submitted" | "rejected";
+  reason?: string;
+};
+
+/**
+ * Level 2 approval (REQ-AG-26, REQ-AG-27): the person answers every question only they can answer, confirms
+ * they've read the changes, types their name and the passcode. Then the packet goes to the mock site.
+ */
+export function ApprovalPanel(props: {
+  packet: Packet;
+  resumeText: string;
+  notes: string;
+  submitted?: LogEntryView;
+  onSubmitted: (entry: LogEntryView) => void;
+}) {
+  const [name, setName] = useState("");
+  const [passcode, setPasscode] = useState("");
+  const [reviewed, setReviewed] = useState(false);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { packet } = props;
+  const missing = packet.personOnly.filter((q) => !(answers[q] ?? "").trim());
+  const canSubmit = name.trim() && passcode && reviewed && missing.length === 0 && !busy;
+
+  if (props.submitted) {
+    return (
+      <section className={base.card}>
+        <p className={styles.eyebrow}>Mock application site</p>
+        <h2>Submitted</h2>
+        <p className={`${styles.decision} ${styles.apply}`}>Application received</p>
+        <p>
+          {props.submitted.level === 3 ? "Submitted automatically at level 3" : `Approved by ${props.submitted.approver}`} at{" "}
+          {new Date(props.submitted.at).toLocaleString()}. Reference {props.submitted.id}.
+        </p>
+        <p className={base.hint}>This went to the team&apos;s mock application site only. No employer received anything.</p>
+      </section>
+    );
+  }
+
+  async function approveAndSubmit() {
+    setBusy(true);
+    setError(null);
+    const approved = await postJson<{ packetHash: string }>(
+      "/api/agent/approve",
+      { packet, resumeText: props.resumeText, notes: props.notes, approverName: name, passcode, reviewed },
+      "Approval failed.",
+    );
+    if (!approved.ok) {
+      setBusy(false);
+      return setError(approved.message);
+    }
+    const sent = await postJson<{ entry: LogEntryView }>("/api/mock/apply", { packet, answers }, "The mock site didn't accept it.");
+    setBusy(false);
+    if (!sent.ok) return setError(sent.message);
+    props.onSubmitted(sent.data.entry);
+  }
+
+  return (
+    <section className={base.card}>
+      <p className={styles.eyebrow}>Level 2 · you approve, then the agent submits</p>
+      <h2>Approve and submit</h2>
+      <p className={base.hint}>
+        This submits to the team&apos;s mock application site, never to a real employer. The exact resume above is what gets sent; any change
+        means approving again.
+      </p>
+      {packet.personOnly.length > 0 && (
+        <>
+          <h3>The application asks</h3>
+          <p className={base.hint}>Only you can answer these. The agent never does.</p>
+          {packet.personOnly.map((q) => (
+            <div key={q}>
+              <label className={base.label} htmlFor={`po-${q}`}>
+                {q}
+              </label>
+              <input
+                id={`po-${q}`}
+                className={styles.input}
+                value={answers[q] ?? ""}
+                onChange={(e) => setAnswers({ ...answers, [q]: e.target.value })}
+              />
+            </div>
+          ))}
+        </>
+      )}
+      <label className={base.checkbox}>
+        <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} />
+        I&apos;ve read every change and checked each &ldquo;check this&rdquo; flag
+      </label>
+      <div className={styles.fields}>
+        <div>
+          <label className={base.label} htmlFor="approver-name">
+            Your name
+          </label>
+          <input id="approver-name" className={styles.input} value={name} autoComplete="name" onChange={(e) => setName(e.target.value)} />
+        </div>
+        <div>
+          <label className={base.label} htmlFor="approver-passcode">
+            Passcode
+          </label>
+          <input
+            id="approver-passcode"
+            className={styles.input}
+            type="password"
+            autoComplete="off"
+            value={passcode}
+            onChange={(e) => setPasscode(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className={styles.row}>
+        <button type="button" className={base.button} disabled={!canSubmit} onClick={approveAndSubmit}>
+          {busy ? "Submitting…" : "Approve and submit"}
+        </button>
+      </div>
+      {error && (
+        <p className={base.error} role="alert">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** The mock site's log, behind the passcode (REQ-AG-35). */
+export function MockLog() {
+  const [passcode, setPasscode] = useState("");
+  const [entries, setEntries] = useState<LogEntryView[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  async function load() {
+    setError(null);
+    const out = await postJson<{ entries: LogEntryView[] }>("/api/mock/log", { passcode }, "The log couldn't be read.");
+    if (!out.ok) return setError(out.message);
+    setEntries(out.data.entries);
+  }
+  return (
+    <details className={`${base.card} ${styles.logCard}`}>
+      <summary>Mock application site log</summary>
+      <p className={base.hint}>Every submission and refusal, with who approved it and who answered each question. It never stores the resume.</p>
+      <div className={styles.row}>
+        <input
+          className={styles.input}
+          type="password"
+          placeholder="Passcode"
+          aria-label="Passcode for the log"
+          autoComplete="off"
+          value={passcode}
+          onChange={(e) => setPasscode(e.target.value)}
+        />
+        <button type="button" className={styles.secondary} disabled={!passcode} onClick={load}>
+          Show the log
+        </button>
+      </div>
+      {error && (
+        <p className={base.error} role="alert">
+          {error}
+        </p>
+      )}
+      {entries && (
+        <div className={base.tableWrap}>
+          <table className={base.table}>
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Job</th>
+                <th>Level</th>
+                <th>Approved by</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.length === 0 && (
+                <tr>
+                  <td colSpan={5}>Nothing yet.</td>
+                </tr>
+              )}
+              {entries.map((e) => (
+                <tr key={e.id}>
+                  <td>{new Date(e.at).toLocaleString()}</td>
+                  <td>{e.postingTitle}</td>
+                  <td>{e.level}</td>
+                  <td>{e.approver}</td>
+                  <td>{e.outcome === "submitted" ? "Submitted" : `Refused: ${e.reason?.replace(/_/g, " ")}`}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </details>
   );
 }

@@ -12,14 +12,16 @@ import type { InputWarning } from "@/lib/agent/warnings";
 import { MAX_JD_CHARS, MIN_JD_CHARS } from "@/lib/limits";
 import base from "../Analyzer.module.css";
 import styles from "../AgentRunner.module.css";
-import { DECISION, JobResult, type RunResult } from "./JobResult";
+import { buildPacket } from "@/lib/agent/packetShape";
+import { ApprovalPanel, DECISION, JobResult, MockLog, type LogEntryView, type RunResult } from "./JobResult";
 import { ExportPanel, highlightNew, postJson, reasonsText, uploadFile } from "./shared";
 
 const STORAGE_KEY = "application-prep-agent.v1";
 const MAX_JOBS = 10;
 
 type Job = { id: string; title: string; text: string; url?: string };
-type JobRun = { status: "running" | "done" | "failed"; result?: RunResult; error?: string };
+type AutoOutcome = { status: "submitted"; entry: LogEntryView } | { status: "stopped"; reason: string };
+type JobRun = { status: "running" | "done" | "failed"; result?: RunResult; error?: string; auto?: AutoOutcome; submitted?: LogEntryView };
 type Master = { text: string; accepted: boolean };
 type Saved = {
   resumeText: string | null;
@@ -203,13 +205,38 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
     setJobInput("");
   }
 
+  // Level 3: started by a person with the passcode, kept in memory only, ends after an hour (REQ-AG-30).
+  const [level3, setLevel3] = useState<{ token: string; until: number } | null>(null);
+  const [level3Pass, setLevel3Pass] = useState("");
+  const [level3Error, setLevel3Error] = useState<string | null>(null);
+  const level3On = level3 !== null && level3.until > Date.now();
+
+  async function startLevel3() {
+    setLevel3Error(null);
+    const out = await postJson<{ token: string; expiresInSeconds: number }>("/api/agent/level3", { passcode: level3Pass }, "Level 3 couldn't be turned on.");
+    if (!out.ok) return setLevel3Error(out.message);
+    setLevel3({ token: out.data.token, until: Date.now() + out.data.expiresInSeconds * 1000 });
+    setLevel3Pass("");
+  }
+
   async function runJob(job: Job, prepareAnyway = false) {
     setRuns((r) => ({ ...r, [job.id]: { ...r[job.id], status: "running" } }));
-    const out = await postJson<RunResult>(
-      "/api/agent/run",
-      { resumeText: baseResume, notes: allNotes, posting: job.text, prepareAnyway, ...identity },
-      "This job couldn't be checked.",
-    );
+    const payload = { resumeText: baseResume, notes: allNotes, posting: job.text, ...identity };
+    if (level3On && !prepareAnyway) {
+      const out = await postJson<RunResult & { auto: AutoOutcome }>(
+        "/api/agent/auto",
+        { ...payload, postingTitle: job.title, level3Token: level3!.token },
+        "This job couldn't be checked.",
+      );
+      setRuns((r) => ({
+        ...r,
+        [job.id]: out.ok
+          ? { status: "done", result: out.data, auto: out.data.auto, submitted: out.data.auto.status === "submitted" ? out.data.auto.entry : undefined }
+          : { status: "failed", error: out.message, result: r[job.id]?.result },
+      }));
+      return;
+    }
+    const out = await postJson<RunResult>("/api/agent/run", { ...payload, prepareAnyway }, "This job couldn't be checked.");
     setRuns((r) => ({ ...r, [job.id]: out.ok ? { status: "done", result: out.data } : { status: "failed", error: out.message, result: r[job.id]?.result } }));
   }
 
@@ -634,6 +661,8 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
                             {run?.status === "running" && <span className={base.hint}>Checking…</span>}
                             {run?.status === "failed" && <span className={styles.none}>{run.error}</span>}
                             {d && <span className={`${styles.decisionSmall} ${DECISION[d.decision].className}`}>{DECISION[d.decision].label}</span>}
+                            {run?.submitted && <div className={base.hint}>Submitted{run.submitted.level === 3 ? " automatically" : ""}</div>}
+                            {run?.auto?.status === "stopped" && <div className={base.hint}>Level 3 stopped: {run.auto.reason}</div>}
                             {!run && <span className={base.hint}>Not checked</span>}
                           </td>
                           <td>{d?.coverage != null ? `${Math.round(d.coverage * 100)}%` : ""}</td>
@@ -671,9 +700,45 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
                   </tbody>
                 </table>
               </div>
+              <div className={`${styles.level3} ${level3On ? styles.level3On : ""}`}>
+                <strong>Level 3: submit clean jobs automatically</strong>
+                <p className={base.hint}>
+                  When it&apos;s on, the agent submits a job to the team&apos;s mock application site by itself only if it&apos;s an Apply with no
+                  warnings, nothing for you to confirm, and no questions only you can answer. Everything else stops and waits for you. It never
+                  submits to a real employer.
+                </p>
+                {level3On ? (
+                  <div className={styles.row}>
+                    <span>On until {new Date(level3!.until).toLocaleTimeString()}.</span>
+                    <button type="button" className={styles.secondary} onClick={() => setLevel3(null)}>
+                      Turn off
+                    </button>
+                  </div>
+                ) : (
+                  <div className={styles.row}>
+                    <input
+                      className={styles.input}
+                      type="password"
+                      placeholder="Passcode"
+                      aria-label="Passcode to turn on level 3"
+                      autoComplete="off"
+                      value={level3Pass}
+                      onChange={(e) => setLevel3Pass(e.target.value)}
+                    />
+                    <button type="button" className={styles.secondary} disabled={!level3Pass} onClick={startLevel3}>
+                      Turn on level 3
+                    </button>
+                  </div>
+                )}
+                {level3Error && (
+                  <p className={base.error} role="alert">
+                    {level3Error}
+                  </p>
+                )}
+              </div>
               <div className={styles.row}>
                 <button type="button" className={base.button} disabled={checking || jobs.every((j) => runs[j.id]?.status === "done")} onClick={checkAllJobs}>
-                  {checking ? "Checking jobs…" : "Check my jobs"}
+                  {checking ? "Checking jobs…" : level3On ? "Check my jobs and auto-submit the clean ones" : "Check my jobs"}
                 </button>
               </div>
               {checking && <p className={base.status}>About a minute per job, two at a time.</p>}
@@ -716,7 +781,27 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
               onPrepareAnyway={() => runJob(selectedJob, true)}
               fileStem={`resume-${selectedJob.title.split(" · ")[0].toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}`}
             />
-          ) : (
+          ) : null}
+          {selectedJob && selectedRun?.auto?.status === "stopped" && !selectedRun.submitted && (
+            <p className={`${base.warning} ${styles.factsWarning}`}>Level 3 stopped on this job: {selectedRun.auto.reason} Review it and approve it yourself below, or leave it.</p>
+          )}
+          {selectedJob && selectedRun?.result?.tailor && (
+            <ApprovalPanel
+              key={`approve-${selectedJob.id}`}
+              packet={buildPacket({
+                postingTitle: selectedJob.title,
+                posting: selectedJob.text,
+                decide: selectedRun.result.decide,
+                tailor: selectedRun.result.tailor,
+                mode: selectedRun.result.mode,
+              })}
+              resumeText={baseResume}
+              notes={allNotes}
+              submitted={selectedRun.submitted}
+              onSubmitted={(entry) => setRuns((r) => ({ ...r, [selectedJob.id]: { ...r[selectedJob.id], submitted: entry } }))}
+            />
+          )}
+          {!(selectedJob && selectedRun?.result) && (
             <section className={base.card}>
               <p className={styles.eyebrow}>Step 6 of 6</p>
           <h2>Tailor and export</h2>
@@ -728,6 +813,7 @@ export default function AgentFlow({ simulated }: { simulated: boolean }) {
               </div>
             </section>
           )}
+          <MockLog />
         </>
       )}
     </main>

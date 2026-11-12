@@ -511,3 +511,42 @@
   height: 1px;
   background: var(--border);
 }
+
+.input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0 14px;
+}
+
+.logCard summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.level3 {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.level3On {
+  border-color: var(--accent);
+  background: var(--note-bg);
+}

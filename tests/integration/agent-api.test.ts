@@ -4,12 +4,15 @@ import { simulatedModel } from "@/lib/agent/simulated";
 import { SAMPLE_NOTES, SAMPLE_POSTING, SAMPLE_RESUME } from "@/lib/agent/sample";
 import { createAgentExportHandler, createAgentRunHandler, createPostingLinkHandler } from "@/lib/api/agent";
 import { RateLimiter } from "@/lib/rateLimit";
+import { memoryStore } from "@/lib/store";
 
 const HOUR = 60 * 60 * 1000;
 
 function deps() {
   return {
     model: simulatedModel,
+    store: memoryStore(),
+    passcode: () => "test-passcode",
     hourlyLimiter: new RateLimiter({ limit: 10, windowMs: HOUR }),
     dailyCap: new RateLimiter({ limit: 100, windowMs: HOUR }),
     exportLimiter: new RateLimiter({ limit: 60, windowMs: HOUR }),

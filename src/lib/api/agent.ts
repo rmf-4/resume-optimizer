@@ -4,7 +4,10 @@ import { ExportError, exportDocx, exportPdf, TEMPLATES, type TemplateId } from "
 import { composeSource, runDecide, type AgentErrorCode, type RunOptions } from "@/lib/agent/run";
 import { runImprove } from "@/lib/agent/improve";
 import { runInterview } from "@/lib/agent/interview";
+import { buildPacket, PacketSchema } from "@/lib/agent/packetShape";
 import { fetchPosting } from "@/lib/agent/postingLinks";
+import { approvePacket, checkPasscode, level3Active, level3StopReason, readLog, startLevel3, submitToMockSite } from "@/lib/agent/submission";
+import { defaultStore, type Store } from "@/lib/store";
 import { simulatedModel } from "@/lib/agent/simulated";
 import { runTailor } from "@/lib/agent/tailor";
 import type { AgentModel } from "@/lib/agent/types";
@@ -15,6 +18,9 @@ import { clientIp, errorResponse, FORBIDDEN_MESSAGE, json, originAllowed } from 
 
 export type AgentDeps = {
   model: AgentModel;
+  store: Store;
+  /** The approval passcode (AGENT_PASSCODE). Read per request so a missing secret shows a clear message. */
+  passcode: () => string | undefined;
   hourlyLimiter: RateLimiter;
   dailyCap: RateLimiter;
   exportLimiter: RateLimiter;
@@ -241,12 +247,143 @@ export function createPostingLinkHandler(deps: { linkLimiter: RateLimiter; fetch
   };
 }
 
+// ---------- approval, the mock application site and level 3 (REQ-AG-24 to REQ-AG-35) ----------
+
+const PASSCODE_STATUS = { not_configured: 503, wrong_passcode: 401, too_many_attempts: 429 } as const;
+
+/** POST /api/agent/approve: a person approves one packet with their name and the passcode (REQ-AG-27). */
+export function createApproveHandler(deps: AgentDeps) {
+  return async function approve(req: Request): Promise<Response> {
+    if (!originAllowed(req)) return errorResponse(403, "forbidden", FORBIDDEN_MESSAGE);
+    const body = await readBody(req);
+    const packet = PacketSchema.safeParse(body?.packet);
+    if (!body || !packet.success) return errorResponse(400, "bad_request", "The request could not be read.");
+    const approver = typeof body.approverName === "string" ? body.approverName.replace(/\s+/g, " ").trim().slice(0, 80) : "";
+    if (!approver) return errorResponse(422, "approver_required", "Type your name to approve.");
+    if (body.reviewed !== true) return errorResponse(422, "review_required", "Confirm you've read every change and checked each flag.");
+    const inputs = readInputs(body, "resumeText", { posting: "none" });
+    if (inputs instanceof Response) return inputs;
+    try {
+      const pass = await checkPasscode(deps.store, clientIp(req), body.passcode, deps.passcode());
+      if (!pass.ok) return errorResponse(PASSCODE_STATUS[pass.code], pass.code, pass.message);
+      const out = await approvePacket({ store: deps.store, packet: packet.data, resumeText: inputs.resume, notes: inputs.notes || undefined, approver, level: 2 });
+      if (!out.ok) return json({ error: { code: out.code, message: out.message }, findings: out.findings }, 422);
+      return json({ packetHash: out.packetHash });
+    } catch (e) {
+      return failure(e, "approve");
+    }
+  };
+}
+
+/** POST /api/mock/apply: the mock employer's application endpoint. The only place anything is ever submitted. */
+export function createMockApplyHandler(deps: Pick<AgentDeps, "store">) {
+  return async function apply(req: Request): Promise<Response> {
+    if (!originAllowed(req)) return errorResponse(403, "forbidden", FORBIDDEN_MESSAGE);
+    const body = await readBody(req);
+    const packet = PacketSchema.safeParse(body?.packet);
+    if (!body || !packet.success) return errorResponse(400, "bad_request", "The request could not be read.");
+    const answers: Record<string, string> = {};
+    if (body.answers && typeof body.answers === "object") {
+      for (const [q, a] of Object.entries(body.answers as Record<string, unknown>)) if (typeof a === "string") answers[q] = a.slice(0, 1000);
+    }
+    try {
+      const out = await submitToMockSite({ store: deps.store, packet: packet.data, answers });
+      if (!out.ok) return json({ error: { code: out.code, message: out.message }, entry: out.entry }, out.status);
+      return json({ entry: out.entry });
+    } catch (e) {
+      return failure(e, "mock apply");
+    }
+  };
+}
+
+/** POST /api/agent/level3: a person starts a level 3 session with the passcode (REQ-AG-30). */
+export function createLevel3Handler(deps: AgentDeps) {
+  return async function level3(req: Request): Promise<Response> {
+    if (!originAllowed(req)) return errorResponse(403, "forbidden", FORBIDDEN_MESSAGE);
+    const body = await readBody(req);
+    if (!body) return errorResponse(400, "bad_request", "The request could not be read.");
+    try {
+      const pass = await checkPasscode(deps.store, clientIp(req), body.passcode, deps.passcode());
+      if (!pass.ok) return errorResponse(PASSCODE_STATUS[pass.code], pass.code, pass.message);
+      return json(await startLevel3(deps.store));
+    } catch (e) {
+      return failure(e, "level 3");
+    }
+  };
+}
+
+/**
+ * POST /api/agent/auto: level 3 for one posting. The server runs the decision and tailoring itself, so the
+ * page can't claim a job is clean, then submits to the mock site only if nothing needs a person (REQ-AG-31).
+ */
+export function createAutoHandler(deps: AgentDeps) {
+  return async function auto(req: Request): Promise<Response> {
+    if (!originAllowed(req)) return errorResponse(403, "forbidden", FORBIDDEN_MESSAGE);
+    const body = await readBody(req);
+    if (!body) return errorResponse(400, "bad_request", "The request could not be read.");
+    const inputs = readInputs(body, "resumeText");
+    if (inputs instanceof Response) return inputs;
+    try {
+      if (!(await level3Active(deps.store, body.level3Token))) {
+        return errorResponse(403, "level3_not_started", "Level 3 isn't on. Turn it on with the passcode first.");
+      }
+      const blocked = gate(body, req, deps);
+      if (blocked) return blocked;
+      const agentInput = { resume: inputs.resume, posting: inputs.posting, notes: inputs.notes || undefined };
+      const decided = await runDecide(agentInput, deps.model, deps.runOptions);
+      if (!decided.ok) return errorResponse(ERROR_STATUS[decided.error.code], decided.error.code, decided.error.message);
+      const { context: _context, ...decide } = decided.result;
+      void _context;
+      const title = typeof body.postingTitle === "string" ? body.postingTitle.slice(0, 300) : inputs.posting.split("\n")[0].slice(0, 120);
+      if (decide.decision !== "apply") {
+        return json({ mode: deps.model.mode, decide, tailor: null, auto: { status: "stopped", reason: level3StopReason({ ...emptyPacket, decision: decide.decision }) } });
+      }
+      const tailored = await runTailor(agentInput, decided.result, deps.model, deps.runOptions);
+      if (!tailored.ok) return json({ mode: deps.model.mode, decide, tailor: null, tailorError: tailored.error, auto: { status: "stopped", reason: tailored.error.message } });
+      const packet = buildPacket({ postingTitle: title, posting: inputs.posting, decide, tailor: tailored.result, mode: deps.model.mode });
+      const stop = level3StopReason(packet);
+      if (stop) return json({ mode: deps.model.mode, decide, tailor: tailored.result, auto: { status: "stopped", reason: stop } });
+      const approved = await approvePacket({ store: deps.store, packet, resumeText: inputs.resume, notes: inputs.notes || undefined, approver: "auto (level 3)", level: 3 });
+      if (!approved.ok) return json({ mode: deps.model.mode, decide, tailor: tailored.result, auto: { status: "stopped", reason: approved.message } });
+      const sent = await submitToMockSite({ store: deps.store, packet, answers: {} });
+      return json({
+        mode: deps.model.mode,
+        decide,
+        tailor: tailored.result,
+        auto: sent.ok ? { status: "submitted", entry: sent.entry } : { status: "stopped", reason: sent.message },
+      });
+    } catch (e) {
+      return failure(e, "auto");
+    }
+  };
+}
+
+const emptyPacket = { postingTitle: "", posting: "", resume: "", decision: "apply" as const, coverage: null, warnings: [], flags: 0, personOnly: [], mode: "ai" as const };
+
+/** POST /api/mock/log: the mock site's log, behind the passcode (REQ-AG-35). POST keeps the passcode out of URLs. */
+export function createLogHandler(deps: AgentDeps) {
+  return async function log(req: Request): Promise<Response> {
+    if (!originAllowed(req)) return errorResponse(403, "forbidden", FORBIDDEN_MESSAGE);
+    const body = await readBody(req);
+    if (!body) return errorResponse(400, "bad_request", "The request could not be read.");
+    try {
+      const pass = await checkPasscode(deps.store, clientIp(req), body.passcode, deps.passcode());
+      if (!pass.ok) return errorResponse(PASSCODE_STATUS[pass.code], pass.code, pass.message);
+      return json({ entries: await readLog(deps.store) });
+    } catch (e) {
+      return failure(e, "log");
+    }
+  };
+}
+
 /** Real AI when ANTHROPIC_API_KEY is set; otherwise the labelled simulated model (REQ-AG-40). */
 export function defaultAgentDeps(): AgentDeps {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   const dailyLimit = Number(process.env.DAILY_ANALYSIS_CAP) || DEFAULT_DAILY_ANALYSIS_CAP;
   return {
     model: apiKey ? anthropicAgentModel(apiKey) : simulatedModel,
+    store: defaultStore(),
+    passcode: () => process.env.AGENT_PASSCODE,
     hourlyLimiter: new RateLimiter({ limit: AGENT_RUNS_PER_HOUR, windowMs: 60 * 60 * 1000 }),
     dailyCap: new RateLimiter({ limit: dailyLimit, windowMs: 24 * 60 * 60 * 1000 }),
     exportLimiter: new RateLimiter({ limit: 60, windowMs: 60 * 60 * 1000 }),
