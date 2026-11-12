@@ -87,7 +87,7 @@ Every submission in this build goes to the mock site, at both levels. ⚠️ A-5
 - **REQ-AG-07** For each requirement, the system shall cite evidence quoted verbatim from the source facts or state that there is none. If a requirement's quote isn't in the posting, then the system shall drop the requirement. If an evidence quote isn't in the source facts, then the system shall discard the evidence.
 - **REQ-AG-08** The system shall compute coverage in code as supported must-haves divided by all must-haves, leaving out person-only requirements. If a posting has fewer than 3 must-haves and also has preferred requirements, coverage shall count both, and the reasons shall say so. ⚠️ A-44
 - **REQ-AG-09** The system shall set the decision in code: apply at coverage of 0.70 or more, skip below 0.40, and needs a human in between. ⚠️ A-44
-- **REQ-AG-10** If a posting has fewer than 3 must-haves after REQ-AG-07, or raises a warning under SEC-AG-03 or SEC-AG-04, then the system shall set the decision to needs a human and show the reason. ⚠️ A-44
+- **REQ-AG-10** If fewer than 3 requirements can be checked after REQ-AG-07 (must-haves, or must-haves and preferred ones under REQ-AG-08), or the inputs raise a warning under SEC-AG-03 or SEC-AG-04, then the system shall set the decision to needs a human and show the reason. ⚠️ A-44
 - **REQ-AG-11** If a must-have credential has no evidence, then the system shall not set the decision to apply. It shall set needs a human, unless coverage already gives skip.
 - **REQ-AG-12** The system shall not present coverage as an ATS score or a chance of success (NG-12).
 - **REQ-AG-13** While a decision is skip or needs a human, the system shall not tailor unless the coach chooses "Prepare anyway". At level 3, the system shall stop on these postings and wait for a person.
@@ -196,7 +196,7 @@ Every submission in this build goes to the mock site, at both levels. ⚠️ A-5
 
 ## 5. Evaluation plan
 
-Pre-registration means these criteria are fixed before the first full run. **The numbers below are a draft for the team to change and commit to git by November 13.** After that, they don't change. ⚠️ A-52
+Pre-registration means these criteria are fixed before the first full run. **Frozen by the team on 2026-11-12**, in this commit, together with the decision cutoffs in REQ-AG-08 to REQ-AG-11 (`src/lib/agent/config.ts`: apply at 0.70, skip below 0.40, at least 3 checkable requirements). From here they don't change; any change after the baseline run is logged under rule 5 and reported beside the frozen numbers. ⚠️ A-52
 
 ### Criteria
 
@@ -247,8 +247,8 @@ At least 23 locked cases, each a resume, a posting and an expected answer:
 
 1. Two teammates set expected answers separately. Disagreements are logged and resolved, and the answers are committed to git before the first full run.
 2. Keep 5 separate development cases for building. Don't run the locked cases while building.
-3. Baseline run on November 19. Final run on November 28 on the same set, plus red-team cases and 5 new cases nobody has seen.
-4. Run each case 3 times at levels 2 and 3, because the model varies.
+3. Baseline run on November 18. Final run on November 28 on the same set, plus red-team cases and 5 new cases nobody has seen.
+4. Run each case 3 times, because the model varies. Score every run at both levels: level 2 from the packet as prepared, and level 3 by applying its stop-or-submit rule (REQ-AG-31) to that same packet. Level 3 runs the same decide and tailor steps, so a separate level 3 run would only repeat them.
 5. Log every change made between runs and report both sets of results.
 6. Save failures word for word in `eval/results/`.
 7. Use real public postings saved as files. Use the team's own resumes or synthetic ones, with fake contact details in anything committed.
@@ -377,7 +377,7 @@ Each of these was **decided by Claude while drafting, not by the team**. Every o
 | A-49 | No `[X]` placeholders in agent runs. Nobody is there to fill them in at level 3. | Rewrites are weaker without measures, which C7 will show |
 | **A-50** | The agent never answers person-only questions, not even from answers saved earlier. | Level 3 can never submit a full form. This is deliberate, but it limits how automatic the agent can be |
 | A-51 | A checker finding reverts the bullet instead of re-requesting it. This costs less and always ends in a safe state. | Fewer rewrites survive, which C9 will show |
-| **A-52** | All targets in C1–C9, and 3 runs per case. **These are starting points for the team to change.** | Too strict and the agent fails for no good reason, too loose and the criteria mean little |
+| **A-52** | All targets in C1–C9, and 3 runs per case. **Frozen by the team on 2026-11-12** as drafted, with the baseline on Nov 18 and each run scored at both levels. | Too strict and the agent fails for no good reason, too loose and the criteria mean little |
 | A-53 | The verb, injection and scam lists are short and hand-written. | They are easy to evade, so the red team will likely find gaps |
 | A-54 | The agent is a fixed workflow whose model steps have no tools, rather than a model choosing its own actions. The course accepts workflow platforms, but **confirm that this counts as an agent**. | The design would need the model choosing steps, which weakens SEC-AG-05 |
 | **A-55** | Nothing goes to a real employer, even with approval. The course would allow it with per-action approval. This choice avoids wasting recruiters' time and keeps the build simple. | The report has no real-world application evidence |
