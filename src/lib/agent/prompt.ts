@@ -1,6 +1,6 @@
 import type { AgentPrompt, DecideContext } from "./types";
 
-const DELIMITER_TAGS = /<(\/?)\s*(source_facts|posting)\b/gi;
+const DELIMITER_TAGS = /<(\/?)\s*(source_facts|posting|bullets|bullet|supported|gaps)\b/gi;
 
 /** Stops input text from opening or closing our delimiter blocks (SEC-LLM-01). */
 export function neutralize(text: string): string {

@@ -119,6 +119,9 @@ describe("decide run", () => {
         m.prompts.push(prompt.user);
         return results[Math.min(m.calls++, results.length - 1)];
       },
+      async tailor(): Promise<ModelResult> {
+        return { type: "output", data: { rewrites: [] } };
+      },
     };
     return m;
   }

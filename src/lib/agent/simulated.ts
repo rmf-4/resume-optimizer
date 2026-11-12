@@ -5,7 +5,7 @@
 import type { ModelResult } from "@/lib/step1/types";
 import { stem, tokenize } from "@/lib/text";
 import type { Requirement } from "./decide";
-import type { AgentModel, DecideContext } from "./types";
+import type { AgentModel, DecideContext, TailorContext } from "./types";
 
 const STOP = new Set(
   `a an the and or of to in on for with as at by from is are be will you your we our this that it its their who what such into
@@ -82,9 +82,30 @@ export function simulateDecide(ctx: DecideContext): { requirements: Requirement[
   return { requirements };
 }
 
+const WEAK_OPENINGS: Array<[RegExp, string]> = [
+  [/^responsible for\s+/i, "Handled "],
+  [/^helped\s+/i, "Supported "],
+  [/^assisted\s+(?:with\s+)?/i, "Supported "],
+  [/^worked on\s+/i, "Contributed to "],
+  [/^participated in\s+/i, "Took part in "],
+];
+
+/** Rewrites only weak openings, adding nothing else, so the checker has something to pass or catch. */
+export function simulateTailor(ctx: TailorContext): { rewrites: { bullet_id: number; text: string }[] } {
+  const rewrites: { bullet_id: number; text: string }[] = [];
+  for (const b of ctx.bullets) {
+    const hit = WEAK_OPENINGS.find(([re]) => re.test(b.text));
+    if (hit) rewrites.push({ bullet_id: b.id, text: b.text.replace(hit[0], hit[1]) });
+  }
+  return { rewrites };
+}
+
 export const simulatedModel: AgentModel = {
   mode: "simulated",
   async decide(_prompt, _signal, ctx): Promise<ModelResult> {
     return { type: "output", data: simulateDecide(ctx) };
+  },
+  async tailor(_prompt, _signal, ctx): Promise<ModelResult> {
+    return { type: "output", data: simulateTailor(ctx) };
   },
 };

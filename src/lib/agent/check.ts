@@ -210,6 +210,37 @@ const STOPWORDS = new Set(
   ).split(" "),
 );
 
+/** Irregular verb forms, so "built" matches "build" and "led" matches "lead". */
+const IRREGULAR: Record<string, string> = {
+  built: "build", led: "lead", wrote: "write", written: "write", ran: "run", made: "make", drove: "drive", driven: "drive",
+  grew: "grow", grown: "grow", taught: "teach", brought: "bring", sold: "sell", bought: "buy", won: "win", chose: "choose",
+  chosen: "choose", spoke: "speak", spoken: "speak", gave: "give", given: "give", took: "take", taken: "take", met: "meet",
+  kept: "keep", held: "hold", saw: "see", seen: "see", began: "begin", begun: "begin", sent: "send", spent: "spend",
+  told: "tell", thought: "think", understood: "understand", oversaw: "oversee", overseen: "oversee", knew: "know",
+  known: "know", paid: "pay", rose: "rise", drew: "draw", drawn: "draw", shown: "show", sought: "seek",
+};
+
+/** Stem after mapping irregular verb forms to their base. */
+export function baseStem(word: string): string {
+  const w = word.toLowerCase();
+  return stem(IRREGULAR[w] ?? w);
+}
+
+/**
+ * Everyday action verbs that rewording uses freely. They never count as a new skill on their own, even
+ * when the posting uses them. Tools, nouns and skill terms are still checked ("dashboards", "forecasting").
+ */
+const GENERIC_VERBS = new Set(
+  (
+    "achieve assist build collaborate communicate complete conduct contribute coordinate create deliver develop document " +
+    "enable engage ensure execute expand facilitate generate handle help identify implement improve increase maintain " +
+    "monitor organize partner perform plan prepare present produce provide reduce report resolve review run serve share " +
+    "streamline support track update work write make take find"
+  )
+    .split(" ")
+    .map((w) => stem(w)),
+);
+
 // ---------- scope ----------
 
 const SCOPE_FAMILIES: string[][] = [
@@ -279,8 +310,8 @@ export function check(input: CheckInput): Finding[] {
   const tokens = wordTokens(masked);
   const sourceTokens = tokenize(source);
   const sourceWords = new Set(sourceTokens);
-  const sourceStems = new Set(sourceTokens.map(stem));
-  const knownWord = (w: string) => sourceWords.has(w.toLowerCase()) || sourceStems.has(stem(w.toLowerCase()));
+  const sourceStems = new Set(sourceTokens.map(baseStem));
+  const knownWord = (w: string) => sourceWords.has(w.toLowerCase()) || sourceStems.has(baseStem(w));
 
   // new_name
   const nameLike = new Set<Token>();
@@ -293,10 +324,11 @@ export function check(input: CheckInput): Finding[] {
 
   // new_skill
   if (input.posting) {
-    const postingStems = new Set(tokenize(input.posting).filter((w) => !STOPWORDS.has(w)).map(stem));
+    const postingStems = new Set(tokenize(input.posting).filter((w) => !STOPWORDS.has(w)).map(baseStem));
     const isNewSkill = (t: Token) => {
       const w = t.text.toLowerCase();
-      return /[a-z]/.test(w) && !STOPWORDS.has(w) && postingStems.has(stem(w)) && !knownWord(w);
+      const s = baseStem(w);
+      return /[a-z]/.test(w) && !STOPWORDS.has(w) && !GENERIC_VERBS.has(s) && postingStems.has(s) && !knownWord(w);
     };
     for (const g of groupRuns(candidate, tokens, isNewSkill)) add("new_skill", g.text, g.at);
   }

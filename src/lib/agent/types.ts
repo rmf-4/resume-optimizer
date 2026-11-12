@@ -5,8 +5,18 @@ export type AgentPrompt = { system: string; user: string };
 /** What the decide step's model saw: cleaned, contact-redacted source facts and posting. */
 export type DecideContext = { source: string; posting: string };
 
+/** What the tailor step's model saw: redacted facts and posting, bullets by id, and the decide step's findings. */
+export type TailorContext = DecideContext & {
+  bullets: { id: number; text: string }[];
+  /** Requirement quotes with evidence: wording the rewrites may use. */
+  supported: string[];
+  /** Requirement quotes with no evidence: never to be claimed. */
+  gaps: string[];
+};
+
 export interface AgentModel {
   /** "simulated" is the built-in non-AI stand-in (REQ-AG-40). Its results never count as evaluation evidence. */
   readonly mode: "ai" | "simulated";
   decide(prompt: AgentPrompt, signal: AbortSignal, ctx: DecideContext): Promise<ModelResult>;
+  tailor(prompt: AgentPrompt, signal: AbortSignal, ctx: TailorContext): Promise<ModelResult>;
 }

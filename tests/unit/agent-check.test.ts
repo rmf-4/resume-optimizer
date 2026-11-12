@@ -103,6 +103,15 @@ describe("REQ-AG-19 finding types", () => {
     expect(types(run("Built an Excel model and dashboards", { posting: undefined }))).not.toContain("new_skill");
   });
 
+  it("test_irregular_verbs_and_generic_action_verbs_are_not_new_skills", () => {
+    // "building" matches the source's "Built"; "Communicated" is an everyday verb, even though the posting says "Communicate".
+    expect(run("Cut monthly reconciliation time by 6 hours by building an Excel model")).toEqual([]);
+    expect(run("Communicated supply chain findings to senior managers each quarter", { baseline: undefined })).toEqual([]);
+    // Skill terms from the posting are still caught.
+    expect(run("Built an Excel model for demand forecasting")).toContainEqual(expect.objectContaining({ type: "new_skill", text: "demand forecasting" }));
+    expect(run("Built an Excel model and dashboards")).toContainEqual({ type: "new_skill", text: "dashboards" });
+  });
+
   it("test_scope_verb_allowed_when_in_baseline", () => {
     expect(types(run("Led weekly vendor onboarding", { baseline: "Led vendor onboarding each week" }))).not.toContain("scope_change");
     expect(types(run("Managed vendor onboarding", { baseline: "Helped the team with vendor onboarding and scheduling" }))).toContain("scope_change");

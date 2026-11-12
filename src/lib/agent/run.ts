@@ -24,7 +24,7 @@ export type DecideResult = DecisionSummary & {
   context: DecideContext;
 };
 
-export type AgentErrorCode = "ai_unavailable" | "invalid_output" | "refused";
+export type AgentErrorCode = "ai_unavailable" | "invalid_output" | "refused" | "not_apply";
 export type DecideOutcome = { ok: true; result: DecideResult } | { ok: false; error: { code: AgentErrorCode; message: string } };
 
 const MESSAGES = {
