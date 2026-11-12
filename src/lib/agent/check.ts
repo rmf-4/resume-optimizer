@@ -3,6 +3,7 @@
 // the source facts don't support. It matches patterns, not meaning (see AGENT_SPEC.md §6).
 
 import { stem, tokenize } from "@/lib/text";
+import { EMAIL, INVISIBLE, PHONE, URL_RE, trimTrailingPunct } from "./patterns";
 
 export const FINDING_TYPES = [
   "new_number",
@@ -73,15 +74,7 @@ function groupRuns(original: string, tokens: Token[], flagged: (t: Token) => boo
 
 // ---------- contacts ----------
 
-const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
-const URL_RE = /\b(?:https?:\/\/|www\.)[^\s<>()"']+|\b(?:[A-Za-z0-9-]+\.)+(?:com|org|net|io|dev|ai|edu|co|me|app|gov|us)\b(?:\/[^\s<>()"']*)?/gi;
-const PHONE = /(?<![\w])(?:\+?1[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)/g;
-
 type Contact = { text: string; key: string; start: number; end: number };
-
-function trimPunct(text: string): string {
-  return text.replace(/[.,;:!?)\]]+$/, "");
-}
 
 function urlKey(text: string): string {
   return text.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/+$/, "");
@@ -102,7 +95,7 @@ function extractContacts(text: string): { contacts: Contact[]; masked: string } 
   ];
   for (const [re, key] of passes) {
     for (const m of matchesOf(re, masked)) {
-      const found = trimPunct(m[0]);
+      const found = trimTrailingPunct(m[0]);
       if (!found) continue;
       contacts.push({ text: found, key: key(found), start: m.index, end: m.index + found.length });
     }
@@ -241,7 +234,6 @@ const SCOPE_FAMILIES: string[][] = [
 
 // ---------- hidden text ----------
 
-const INVISIBLE = /[­᠎​-‏‪-‮⁠-⁤⁦-⁩﻿]|[\u{E0000}-\u{E007F}]/gu;
 const HIDE_INSTRUCTION =
   /\b(?:white|invisible|hidden)\s+(?:text|font|ink)\b|\bfont[- ]size\s*:?\s*0(?:\.\d+)?\s*(?:px|pt)?\b|\bdisplay\s*:\s*none\b|\bcolou?r\s*:\s*(?:#?fff(?:fff)?|white)\b|\bkeyword[- ]stuff\w*|\b(?:hide|hidden)\s+keywords?\b/gi;
 
