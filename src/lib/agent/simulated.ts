@@ -5,6 +5,8 @@
 import type { ModelResult } from "@/lib/step1/types";
 import { stem, tokenize } from "@/lib/text";
 import type { Requirement } from "./decide";
+import type { ImproveContext } from "./improve";
+import type { InterviewContext } from "./interview";
 import type { AgentModel, DecideContext, TailorContext } from "./types";
 
 const STOP = new Set(
@@ -106,6 +108,27 @@ export function simulateTailor(ctx: TailorContext): {
   return { rewrites, lead_bullet_ids: [], skill_line_orders: [], angle: "Simulated run: weak openings replaced, nothing else changed.", questions: [] };
 }
 
+/** Asks for a number on each bullet that has none: a crude but honest stand-in for the interview. */
+export function simulateInterview(ctx: InterviewContext): { questions: { topic: string; question: string; kind: "number" }[] } {
+  const bullets = ctx.source
+    .split(/\r?\n/)
+    .filter((l) => BULLET.test(l) && !/\d/.test(l))
+    .map((l) => l.replace(BULLET, "").trim())
+    .slice(0, 6);
+  return {
+    questions: bullets.map((b) => ({
+      topic: b.split(/\s+/).slice(0, 4).join(" "),
+      question: `For "${b.slice(0, 80)}${b.length > 80 ? "…" : ""}", what was the scale or result, as a number if you have one?`,
+      kind: "number" as const,
+    })),
+  };
+}
+
+/** Rewrites weak openings only and adds nothing, like simulateTailor. */
+export function simulateImprove(ctx: ImproveContext) {
+  return { ...simulateTailor({ source: ctx.source, posting: "", bullets: ctx.bullets, supported: [], gaps: [] }), new_bullets: [], new_entries: [] };
+}
+
 export const simulatedModel: AgentModel = {
   mode: "simulated",
   async decide(_prompt, _signal, ctx): Promise<ModelResult> {
@@ -113,5 +136,11 @@ export const simulatedModel: AgentModel = {
   },
   async tailor(_prompt, _signal, ctx): Promise<ModelResult> {
     return { type: "output", data: simulateTailor(ctx) };
+  },
+  async interview(_prompt, _signal, ctx): Promise<ModelResult> {
+    return { type: "output", data: simulateInterview(ctx) };
+  },
+  async improve(_prompt, _signal, ctx): Promise<ModelResult> {
+    return { type: "output", data: simulateImprove(ctx) };
   },
 };

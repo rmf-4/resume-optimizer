@@ -140,6 +140,12 @@ describe("decide run", () => {
       async tailor(): Promise<ModelResult> {
         return { type: "output", data: { rewrites: [] } };
       },
+      async interview(): Promise<ModelResult> {
+        return { type: "output", data: { questions: [] } };
+      },
+      async improve(): Promise<ModelResult> {
+        return { type: "output", data: { rewrites: [], new_bullets: [], new_entries: [] } };
+      },
     };
     return m;
   }

@@ -29,6 +29,17 @@ Uses the EARS conventions and ⚠️ A-nn flags from `requirements.md`. New assu
 
 ## 2. How a run works
 
+*Changed 2026-11-12 at the team's request:* the agent is one guided workflow on one page, the site's home page. Before any job is looked at, it builds a stronger master resume:
+
+1. **Resume:** the client's current resume, kept in that browser only, with "Forget everything".
+2. **What your AI knows:** a copy-paste prompt pulls the client's projects from their own AI assistant into the notes (REQ-AG-45).
+3. **Questions:** the agent asks 6 to 10 questions about the resume and notes before changing anything (REQ-AG-46).
+4. **Stronger resume:** it rebuilds the resume from the resume, notes and answers, including new bullets and entries, every line checked (REQ-AG-47). The client accepts it as the base, or keeps the original.
+5. **Jobs:** up to 10 postings by link or text, decided and ranked. This is the decide step below.
+6. **Tailor and export:** each job gets the tailor, check, approve and submit steps below, starting from the master resume.
+
+The per-job steps:
+
 1. **Input:** the coach supplies one client's source facts and up to 10 saved postings.
 2. **Decide:** for each posting, the agent returns apply, skip or needs a human, with reasons.
 3. **Tailor:** the agent rewrites bullets for postings marked apply, using only the source facts.
@@ -62,6 +73,11 @@ Every submission in this build goes to the mock site, at both levels. ⚠️ A-5
 - **REQ-AG-04** The system shall offer a sample client and sample postings, so that someone outside the team can run the agent without supplying a resume.
 - **REQ-AG-05** The system shall accept postings as text, files, or links to a posting on Greenhouse, Lever, Ashby or SmartRecruiters. For a link, it shall read the board, organisation and posting ID with strict patterns and fetch only that board's public posting API at an address it builds itself, with no redirects, a 10-second timeout and a size limit. It shall never fetch the URL the user typed, and shall refuse every other link with a message to paste the text instead. Fetched text is untrusted input, like pasted text (SEC-AG-03). This changes NG-08 and SEC-WEB-05. ⚠️ A-63
 - **REQ-AG-45** The system shall offer a prompt the user can copy into their own AI assistant to list the projects and work it remembers, for pasting into the notes. The prompt shall ask for exact numbers and dates, no self-description, `[unsure]` on uncertain lines, and a "THINGS TO CONFIRM" section. Before notes become source facts, the system shall drop every line marked `[unsure]` and everything from a "THINGS TO CONFIRM" heading onwards, and the page shall tell the user to check every line first. The system never connects to the user's assistant. ⚠️ A-62
+
+### Interview and master resume
+
+- **REQ-AG-46** Before changing anything, the system shall ask the client 6 to 10 questions about their resume and notes, not tied to any job: what exactly they did, what a phrase means, missing numbers, tools and results, and significant work the resume leaves out. It shall never suggest an answer or ask what an employer may not. Answers the client gives are added to the notes as facts; skipped questions add nothing.
+- **REQ-AG-47** The system shall build a master resume from the resume, notes and answers. It may rewrite bullets, add up to 2 bullets per role (6 in all) right after the bullet they follow, and add up to 2 projects or roles at the end of an existing section. Every rewritten or added line shall pass the same guards and checker as tailored rewrites, with new lines judged against the notes and answers. Employer, school, title, degree and date lines stay as they were. The client chooses whether the master resume replaces their original as the base for jobs. ⚠️ A-64
 
 ### Decide
 
@@ -365,4 +381,5 @@ Each of these was **decided by Claude while drafting, not by the team**. Every o
 | A-61 | Tailored rewrites may not add self-assessment ("showed strong judgment") or first-person wording. A met requirement's words on a bullet that isn't its evidence are kept but flagged for the coach, and a flag will stop level 3 from auto-submitting. **Added on 2026-11-12** after the first bolder run on a teammate's resume produced "working in cross-functional teams with course staff" and "showed strong judgment", neither in the facts. The self-praise list is short and hand-written. | The checker still can't see meaning: a new collaborator or setting in plain words ("with course staff") passes unless a list catches it. The prompt forbids it and the coach reviews every rewrite |
 | A-62 | Users can pull facts from their own AI assistant's memory with a copy-paste prompt. **The team's idea, 2026-11-12.** Claude wrote the prompt and the rule that drops `[unsure]` lines. | Assistants can state wrong details without marking them. Those reach the notes as "true", so the user's own check is the only defence; the page says so |
 | A-63 | Posting links are read from four job boards' public posting APIs (Greenhouse, Lever, Ashby, SmartRecruiters), chosen because they publish those APIs for exactly this and cover most tech, fintech and finance internships. **The team asked for links on 2026-11-12**; Claude chose the boards and the safety rules. LinkedIn, Indeed and Handshake are refused: their terms forbid scraping and need a login. | A company's own careers site, even one built on Greenhouse (`stripe.com/jobs?gh_jid=...`), needs pasting, because the board name isn't in its link |
+| A-64 | One guided workflow (resume, AI memory, questions, master resume, jobs, tailor) on one page, replacing the separate Step 1 page, with questions asked before any change. **Designed by the team on 2026-11-12.** Claude set the limits (6 to 10 questions; at most 2 new bullets per role, 6 in all, and 2 new entries) and wrote the prompts. | The locked evaluation measures the per-job steps only; the questions and master resume need their own small check |
 | A-58 | Export offers three templates instead of the client's original design: Classic (Liberation Serif in the PDF, Times New Roman in the DOCX), Modern (Lato, Calibri) and Compact (Liberation Sans, Arial), on US Letter. The fonts are open (SIL OFL) and live in `assets/fonts/`. **The team asked for PDF and DOCX, three templates and one-page fit on 2026-11-12**, using a teammate's one-page resume as the model for Classic. Claude chose the fonts, sizes, colours and the structure rules (how dates, locations and roles are recognised). | The file won't look like the client's original. Unusual layouts (two columns, tables) are read as plain lines |

@@ -496,7 +496,8 @@ Step 2: rewrite bullets. Rewrite every bullet you can make stronger or more rele
 - Is tight and readable: active voice, no filler, nothing a recruiter would skim past. Keep the client's own technical detail; don't add jargon the posting doesn't use.
 - Keeps every fact that matters. Numbers, names, tools and results stay. Never drop a number.
 - Is worth the change. Don't make cosmetic edits (commas, "rather than" for "instead of", "over 40" for "40+"); if a change wouldn't make this recruiter more likely to call, leave the bullet as it is. Keep the original's punctuation style.
-- Uses past tense for finished roles. In a current role (dates ending in Present), use present tense consistently.
+- Keeps the tense the role already uses (past tense if the role mixes them). Never mix tenses within a role.
+- For work the client assisted with, opens with an honest verb such as "Contributed to", "Supported" or "Partnered on", never "Helped", "Assisted", "Worked on" or "Participated in", and keeps the result tied to the shared effort.
 - Doesn't open with the same verb as another bullet in the same role.
 - Fits the page: one line holds about 105 characters. End every bullet on a line that's at least two-thirds full, so aim for 75 to 105, 180 to 210 or 285 to 315 characters, and never more than a third longer than the original.
 

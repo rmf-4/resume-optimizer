@@ -4,6 +4,8 @@ import { MODEL_ID } from "@/lib/step1/anthropic";
 import type { ModelResult } from "@/lib/step1/types";
 import { AGENT_AI_TIMEOUT_MS, TAILOR_MAX_OUTPUT_TOKENS } from "./config";
 import { DecideOutputSchema } from "./decide";
+import { ImproveOutputSchema } from "./improve";
+import { InterviewOutputSchema } from "./interview";
 import { TailorOutputSchema } from "./tailor";
 import type { AgentModel, AgentPrompt } from "./types";
 
@@ -36,10 +38,27 @@ export function buildTailorRequest(prompt: AgentPrompt) {
   };
 }
 
+/** The interview request: asking good questions needs less depth than writing, so medium effort. */
+export function buildInterviewRequest(prompt: AgentPrompt) {
+  return { ...buildDecideRequest(prompt), output_config: { effort: "medium" as const, format: betaZodOutputFormat(InterviewOutputSchema) } };
+}
+
+/** The master-resume request: writing quality is the product, so high effort. */
+export function buildImproveRequest(prompt: AgentPrompt) {
+  return { ...buildDecideRequest(prompt), output_config: { effort: "high" as const, format: betaZodOutputFormat(ImproveOutputSchema) } };
+}
+
 /** Calls Claude with the server's key. Retries and timeouts are handled by the caller (REQ-AG-21, REQ-AG-38). */
 export function anthropicAgentModel(apiKey: string): AgentModel {
   const client = new Anthropic({ apiKey, maxRetries: 0, timeout: AGENT_AI_TIMEOUT_MS });
-  async function call(request: ReturnType<typeof buildDecideRequest> | ReturnType<typeof buildTailorRequest>, signal: AbortSignal): Promise<ModelResult> {
+  async function call(
+    request:
+      | ReturnType<typeof buildDecideRequest>
+      | ReturnType<typeof buildTailorRequest>
+      | ReturnType<typeof buildInterviewRequest>
+      | ReturnType<typeof buildImproveRequest>,
+    signal: AbortSignal,
+  ): Promise<ModelResult> {
     let response;
     try {
       response = await client.beta.messages.parse(request, { signal });
@@ -57,5 +76,7 @@ export function anthropicAgentModel(apiKey: string): AgentModel {
     mode: "ai",
     decide: (prompt, signal) => call(buildDecideRequest(prompt), signal),
     tailor: (prompt, signal) => call(buildTailorRequest(prompt), signal),
+    interview: (prompt, signal) => call(buildInterviewRequest(prompt), signal),
+    improve: (prompt, signal) => call(buildImproveRequest(prompt), signal),
   };
 }

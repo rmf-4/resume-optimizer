@@ -297,6 +297,12 @@ describe("REQ-AG-13 tailor run", () => {
         m.lastUser = prompt.user;
         return result;
       },
+      async interview(): Promise<ModelResult> {
+        return { type: "output", data: { questions: [] } };
+      },
+      async improve(): Promise<ModelResult> {
+        return { type: "output", data: { rewrites: [], new_bullets: [], new_entries: [] } };
+      },
     };
     return m;
   }

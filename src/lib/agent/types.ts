@@ -1,4 +1,6 @@
 import type { ModelResult } from "@/lib/step1/types";
+import type { ImproveContext } from "./improve";
+import type { InterviewContext } from "./interview";
 
 export type AgentPrompt = { system: string; user: string };
 
@@ -22,4 +24,6 @@ export interface AgentModel {
   readonly mode: "ai" | "simulated";
   decide(prompt: AgentPrompt, signal: AbortSignal, ctx: DecideContext): Promise<ModelResult>;
   tailor(prompt: AgentPrompt, signal: AbortSignal, ctx: TailorContext): Promise<ModelResult>;
+  interview(prompt: AgentPrompt, signal: AbortSignal, ctx: InterviewContext): Promise<ModelResult>;
+  improve(prompt: AgentPrompt, signal: AbortSignal, ctx: ImproveContext): Promise<ModelResult>;
 }

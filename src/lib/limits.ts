@@ -25,3 +25,8 @@ export const AI_MAX_OUTPUT_TOKENS = 8_000;
 export const ANALYSES_PER_HOUR_PER_VISITOR = 10;
 export const DEFAULT_DAILY_ANALYSIS_CAP = 200;
 export const UPLOADS_PER_HOUR_PER_VISITOR = 30;
+
+// Agent runs (AGENT_SPEC.md). Notes hold the client's facts plus their interview answers, so they get more room.
+export const AGENT_MAX_NOTES_CHARS = 15_000;
+// Model-backed agent requests per visitor per hour: an interview, a master resume and up to 10 postings.
+export const AGENT_RUNS_PER_HOUR = 30;

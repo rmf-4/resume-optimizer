@@ -36,3 +36,10 @@ export function trustedNotes(notes: string): string {
     .join("\n")
     .trim();
 }
+
+/** Turns answered interview questions into notes text: the client's own words, which then count as facts. */
+export function answersToNotes(qa: { question: string; answer: string }[]): string {
+  const answered = qa.filter((x) => x.answer.trim());
+  if (answered.length === 0) return "";
+  return ["Interview answers (from the client):", ...answered.map((x) => `Q: ${x.question.trim()}\nA: ${x.answer.trim()}`)].join("\n");
+}

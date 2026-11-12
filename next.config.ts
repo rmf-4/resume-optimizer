@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // One workflow on one page: the old agent page now lives at the home page.
+  async redirects() {
+    return [{ source: "/agent", destination: "/", permanent: false }];
+  },
   // Export reads its fonts from disk at runtime, so they must ship with that route's serverless function.
   outputFileTracingIncludes: {
     "/api/agent/export": ["./assets/fonts/**/*"],

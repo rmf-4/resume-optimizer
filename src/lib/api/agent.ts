@@ -2,19 +2,14 @@ import { anthropicAgentModel } from "@/lib/agent/anthropic";
 import { check } from "@/lib/agent/check";
 import { ExportError, exportDocx, exportPdf, TEMPLATES, type TemplateId } from "@/lib/agent/export";
 import { composeSource, runDecide, type AgentErrorCode, type RunOptions } from "@/lib/agent/run";
+import { runImprove } from "@/lib/agent/improve";
+import { runInterview } from "@/lib/agent/interview";
 import { fetchPosting } from "@/lib/agent/postingLinks";
 import { simulatedModel } from "@/lib/agent/simulated";
 import { runTailor } from "@/lib/agent/tailor";
 import type { AgentModel } from "@/lib/agent/types";
 import { scanInputs } from "@/lib/agent/warnings";
-import {
-  ANALYSES_PER_HOUR_PER_VISITOR,
-  DEFAULT_DAILY_ANALYSIS_CAP,
-  MAX_JD_CHARS,
-  MAX_NOTES_CHARS,
-  MAX_RESUME_CHARS,
-  MIN_JD_CHARS,
-} from "@/lib/limits";
+import { AGENT_MAX_NOTES_CHARS, AGENT_RUNS_PER_HOUR, DEFAULT_DAILY_ANALYSIS_CAP, MAX_JD_CHARS, MAX_RESUME_CHARS, MIN_JD_CHARS } from "@/lib/limits";
 import { RateLimiter } from "@/lib/rateLimit";
 import { clientIp, errorResponse, FORBIDDEN_MESSAGE, json, originAllowed } from "./http";
 
@@ -45,23 +40,89 @@ async function readBody(req: Request): Promise<Record<string, unknown> | null> {
   }
 }
 
-/** Shared input rules (REQ-AG-01): confirmed resume text, a full posting, notes within limits. */
-function readInputs(body: Record<string, unknown>, resumeField: string): Inputs | Response {
+/** Shared input rules (REQ-AG-01): confirmed resume text, notes within limits, and a full posting where one is needed. */
+function readInputs(body: Record<string, unknown>, resumeField: string, opts: { posting: "required" | "optional" | "none" } = { posting: "required" }): Inputs | Response {
   const resume = body[resumeField];
-  const posting = body.posting;
+  const posting = body.posting ?? "";
   const notes = body.notes ?? "";
   if (typeof resume !== "string" || typeof posting !== "string" || typeof notes !== "string") {
     return errorResponse(400, "bad_request", "The request could not be read.");
   }
   const r = resume.trim();
-  const p = posting.trim();
+  const p = opts.posting === "none" ? "" : posting.trim();
   const n = notes.trim();
   if (!r) return errorResponse(422, "resume_empty", "The resume text is empty.");
   if (r.length > MAX_RESUME_CHARS) return errorResponse(422, "resume_too_long", "The resume text is longer than 50,000 characters.");
-  if (p.length < MIN_JD_CHARS) return errorResponse(422, "jd_too_short", "This posting is too short. Paste the full job posting (at least 300 characters).");
-  if (p.length > MAX_JD_CHARS) return errorResponse(422, "jd_too_long", "The posting is longer than 20,000 characters.");
-  if (n.length > MAX_NOTES_CHARS) return errorResponse(422, "notes_too_long", "The notes are longer than 10,000 characters.");
+  if (opts.posting === "required" || (opts.posting === "optional" && p)) {
+    if (p.length < MIN_JD_CHARS) return errorResponse(422, "jd_too_short", "This posting is too short. Paste the full job posting (at least 300 characters).");
+    if (p.length > MAX_JD_CHARS) return errorResponse(422, "jd_too_long", "The posting is longer than 20,000 characters.");
+  }
+  if (n.length > AGENT_MAX_NOTES_CHARS) return errorResponse(422, "notes_too_long", "The notes and interview answers are longer than 15,000 characters.");
   return { resume: r, posting: p, notes: n };
+}
+
+/** Confirmation, ownership and the shared limits for every model-backed agent request. */
+function gate(body: Record<string, unknown>, req: Request, deps: AgentDeps): Response | null {
+  if (body.confirmed !== true) return errorResponse(400, "not_confirmed", "Please check the extracted resume text and confirm it first.");
+  // REQ-AG-03: only the person's own resume or a made-up one.
+  if (body.ownResumeOrSynthetic !== true) return errorResponse(400, "ownership_required", "Confirm that this resume is yours or is a made-up sample.");
+  const hourly = deps.hourlyLimiter.take(clientIp(req));
+  if (!hourly.allowed) {
+    return errorResponse(429, "rate_limited", `You've reached the limit of ${AGENT_RUNS_PER_HOUR} agent requests per hour. Please try again later.`, {
+      "retry-after": String(hourly.retryAfterSeconds),
+    });
+  }
+  const daily = deps.dailyCap.take("global");
+  if (!daily.allowed) {
+    return errorResponse(503, "daily_cap_reached", "The agent has reached today's limit. Please try again tomorrow.", { "retry-after": String(daily.retryAfterSeconds) });
+  }
+  return null;
+}
+
+function failure(e: unknown, step: string): Response {
+  // Log the error type only, never its message: it could echo resume or posting text (SEC-DATA-03).
+  console.error(`agent ${step}: unexpected failure`, e instanceof Error ? e.name : typeof e);
+  return errorResponse(500, "internal", "Something went wrong. Please try again.");
+}
+
+/** POST /api/agent/interview: questions for the client before anything changes (REQ-AG-46). */
+export function createInterviewHandler(deps: AgentDeps) {
+  return async function interview(req: Request): Promise<Response> {
+    if (!originAllowed(req)) return errorResponse(403, "forbidden", FORBIDDEN_MESSAGE);
+    const body = await readBody(req);
+    if (!body) return errorResponse(400, "bad_request", "The request could not be read.");
+    const inputs = readInputs(body, "resumeText", { posting: "none" });
+    if (inputs instanceof Response) return inputs;
+    const blocked = gate(body, req, deps);
+    if (blocked) return blocked;
+    try {
+      const out = await runInterview({ resume: inputs.resume, notes: inputs.notes || undefined }, deps.model, deps.runOptions);
+      if (!out.ok) return errorResponse(ERROR_STATUS[out.error.code], out.error.code, out.error.message);
+      return json(out);
+    } catch (e) {
+      return failure(e, "interview");
+    }
+  };
+}
+
+/** POST /api/agent/improve: the master resume, built from the resume, notes and interview answers (REQ-AG-47). */
+export function createImproveHandler(deps: AgentDeps) {
+  return async function improve(req: Request): Promise<Response> {
+    if (!originAllowed(req)) return errorResponse(403, "forbidden", FORBIDDEN_MESSAGE);
+    const body = await readBody(req);
+    if (!body) return errorResponse(400, "bad_request", "The request could not be read.");
+    const inputs = readInputs(body, "resumeText", { posting: "none" });
+    if (inputs instanceof Response) return inputs;
+    const blocked = gate(body, req, deps);
+    if (blocked) return blocked;
+    try {
+      const out = await runImprove({ resume: inputs.resume, notes: inputs.notes || undefined }, deps.model, deps.runOptions);
+      if (!out.ok) return errorResponse(ERROR_STATUS[out.error.code], out.error.code, out.error.message);
+      return json(out.result);
+    } catch (e) {
+      return failure(e, "improve");
+    }
+  };
 }
 
 /**
@@ -73,28 +134,10 @@ export function createAgentRunHandler(deps: AgentDeps) {
     if (!originAllowed(req)) return errorResponse(403, "forbidden", FORBIDDEN_MESSAGE);
     const body = await readBody(req);
     if (!body) return errorResponse(400, "bad_request", "The request could not be read.");
-    if (body.confirmed !== true) {
-      return errorResponse(400, "not_confirmed", "Please check the extracted resume text and confirm it first.");
-    }
-    // REQ-AG-03: only the person's own resume or a made-up one.
-    if (body.ownResumeOrSynthetic !== true) {
-      return errorResponse(400, "ownership_required", "Confirm that this resume is yours or is a made-up sample.");
-    }
     const inputs = readInputs(body, "resumeText");
     if (inputs instanceof Response) return inputs;
-
-    const hourly = deps.hourlyLimiter.take(clientIp(req));
-    if (!hourly.allowed) {
-      return errorResponse(429, "rate_limited", "You've reached the limit of 10 agent runs per hour. Please try again later.", {
-        "retry-after": String(hourly.retryAfterSeconds),
-      });
-    }
-    const daily = deps.dailyCap.take("global");
-    if (!daily.allowed) {
-      return errorResponse(503, "daily_cap_reached", "The agent has reached today's limit. Please try again tomorrow.", {
-        "retry-after": String(daily.retryAfterSeconds),
-      });
-    }
+    const blocked = gate(body, req, deps);
+    if (blocked) return blocked;
 
     try {
       const agentInput = { resume: inputs.resume, posting: inputs.posting, notes: inputs.notes || undefined };
@@ -110,9 +153,7 @@ export function createAgentRunHandler(deps: AgentDeps) {
       if (!tailored.ok) return json({ mode: deps.model.mode, decide, tailor: null, tailorError: tailored.error });
       return json({ mode: deps.model.mode, decide, tailor: tailored.result });
     } catch (e) {
-      // Log the error type only, never its message: it could echo resume or posting text (SEC-DATA-03).
-      console.error("agent run: unexpected failure", e instanceof Error ? e.name : typeof e);
-      return errorResponse(500, "internal", "Something went wrong. Please try again.");
+      return failure(e, "run");
     }
   };
 }
@@ -141,7 +182,7 @@ export function createAgentExportHandler(deps: Pick<AgentDeps, "exportLimiter">)
     if (typeof tailored !== "string" || !tailored.trim() || tailored.length > MAX_RESUME_CHARS) {
       return errorResponse(400, "bad_request", "The request could not be read.");
     }
-    const inputs = readInputs(body, "resumeText");
+    const inputs = readInputs(body, "resumeText", { posting: "optional" });
     if (inputs instanceof Response) return inputs;
 
     const limit = deps.exportLimiter.take(clientIp(req));
@@ -150,6 +191,7 @@ export function createAgentExportHandler(deps: Pick<AgentDeps, "exportLimiter">)
     }
 
     const { cleaned } = scanInputs({ resume: inputs.resume, posting: inputs.posting, notes: inputs.notes || undefined });
+    // The posting isn't needed for this check (see below); it's accepted so a job's export carries its context.
     // No posting here: the gaps that `new_skill` needs live in the decide result, which isn't stored yet.
     // Numbers, dates, names, contacts, role inflation and hidden text are all still checked.
     const findings = check({ candidate: tailored, source: composeSource(cleaned.resume, cleaned.notes) });
@@ -205,7 +247,7 @@ export function defaultAgentDeps(): AgentDeps {
   const dailyLimit = Number(process.env.DAILY_ANALYSIS_CAP) || DEFAULT_DAILY_ANALYSIS_CAP;
   return {
     model: apiKey ? anthropicAgentModel(apiKey) : simulatedModel,
-    hourlyLimiter: new RateLimiter({ limit: ANALYSES_PER_HOUR_PER_VISITOR, windowMs: 60 * 60 * 1000 }),
+    hourlyLimiter: new RateLimiter({ limit: AGENT_RUNS_PER_HOUR, windowMs: 60 * 60 * 1000 }),
     dailyCap: new RateLimiter({ limit: dailyLimit, windowMs: 24 * 60 * 60 * 1000 }),
     exportLimiter: new RateLimiter({ limit: 60, windowMs: 60 * 60 * 1000 }),
     linkLimiter: new RateLimiter({ limit: 40, windowMs: 60 * 60 * 1000 }),
