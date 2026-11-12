@@ -117,6 +117,15 @@ Every submission in this build goes to the mock site, at both levels. ⚠️ A-5
 - **REQ-AG-28** The system shall not allow a packet to be edited. To add a true fact, the coach adds it to the notes and runs the posting again, which creates a new packet that needs a new approval. ⚠️ A-48
 - **REQ-AG-29** When a coach rejects a packet, the system shall record the rejection and an optional reason, and shall not submit it.
 
+### Export
+
+**US-AG-8.** As a coach, I want to download the tailored resume as a file, so that the client can use it anywhere.
+
+- **REQ-AG-41** When a packet passes REQ-AG-22, the system shall offer its tailored resume as a DOCX download, a PDF download and a plain-text copy, in one plain layout (name, section headings, bullets). This changes NG-13 for agent runs. ⚠️ A-58
+- **REQ-AG-42** An export shall contain the packet's tailored resume line for line. The only allowed changes are the bullet glyph and, in the PDF, a fixed list of look-alike swaps for characters its font can't show (such as "→" to "->" and "≥" to ">="). If the PDF font can't show any other character, then the PDF export shall fail with a message that names the character, and DOCX shall still work.
+- **REQ-AG-43** When an export is requested, the server shall re-run the checker on the packet's resume against its source facts and refuse the export if there is any finding. This adapts SEC-EXP-02, because the UI state isn't trusted.
+- **REQ-AG-44** Exports shall carry no author, title, creator, producer, company or date metadata (SEC-EXP-01, applied to PDF as well). They shall be built for each request and sent directly, never stored, so SEC-EXP-03's signed URLs and 24-hour deletion don't apply.
+
 ### Levels
 
 - **REQ-AG-30** The system shall run at level 2 unless a person starts the run at level 3 using the passcode. API callers shall not be able to start a level 3 run.
@@ -281,6 +290,10 @@ Level codes are from `TEST_SPEC.md` §0. Each new requirement gets a failing tes
 | REQ-AG-27 | `test_approval_requires_name_and_passcode` | I |
 | REQ-AG-28 | `test_packets_cannot_be_edited_and_rerun_needs_new_approval` | I |
 | REQ-AG-29 | `test_rejected_packet_cannot_be_submitted` | I |
+| REQ-AG-41 | `test_docx_and_pdf_exports_round_trip_through_extractors` | U |
+| REQ-AG-42 | `test_pdf_swaps_lookalikes_and_names_unshowable_characters` | U |
+| REQ-AG-43 | `test_export_refused_when_checker_finds_anything` | I |
+| REQ-AG-44 | `test_exports_carry_no_metadata_and_are_deterministic` | U |
 | REQ-AG-30 | `test_level_3_requires_passcode_and_is_unavailable_to_api` | I |
 | REQ-AG-31 | `test_level_3_stops_on_warning_or_person_only_form` | I |
 | REQ-AG-32 | `test_no_input_can_name_another_destination` | I |
@@ -345,3 +358,4 @@ Each of these was **decided by Claude while drafting, not by the team**. Every o
 | **A-55** | Nothing goes to a real employer, even with approval. The course would allow it with per-action approval. This choice avoids wasting recruiters' time and keeps the build simple. | The report has no real-world application evidence |
 | A-56 | Agent steps use the same model and low effort setting as Step 1 (`claude-opus-5-5`). Cost per posting is unknown until measured. | A cheaper model may be enough, or the budget may need a lower cap |
 | A-57 | What Muse can do comes from press coverage, not Meta's documentation. | The browser agent test may need a different connection method |
+| A-58 | Export uses one plain layout (Helvetica in the PDF, Calibri in the DOCX, US Letter, 0.75" margins) instead of the client's original design. **Requested by the team on 2026-11-12**; the layout itself was chosen by Claude. | The file won't look like the client's original resume |
