@@ -19,6 +19,13 @@ const DECISION: Record<Decide["decision"], { label: string; className: string }>
   needs_human: { label: "Needs a human", className: styles.human },
 };
 
+type TemplateChoice = "classic" | "modern" | "compact";
+const TEMPLATE_CHOICES: { id: TemplateChoice; label: string; description: string }[] = [
+  { id: "classic", label: "Classic", description: "Serif, centred name, ruled capital headings. The traditional business resume." },
+  { id: "modern", label: "Modern", description: "Clean sans serif with navy headings and roles in italics." },
+  { id: "compact", label: "Compact", description: "Small, tight sans serif for a full page of experience." },
+];
+
 const KIND: Record<string, string> = { skill: "Skill or experience", credential: "Credential", person: "Only the client can answer" };
 
 const REVERT: Record<RevertType, string> = {
@@ -93,6 +100,7 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
   const [exporting, setExporting] = useState<"pdf" | "docx" | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [template, setTemplate] = useState<TemplateChoice>("classic");
 
   const postingLength = posting.trim().length;
   const postingValid = postingLength >= MIN_JD_CHARS && postingLength <= MAX_JD_CHARS;
@@ -177,13 +185,13 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
       const res = await fetch("/api/agent/export", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...ranWith, tailored: result.tailor.tailored, format }),
+        body: JSON.stringify({ ...ranWith, tailored: result.tailor.tailored, format, template }),
       });
       if (!res.ok) return setExportError(messageFrom(res, await readJson(res), "The download failed. Please try again."));
       const url = URL.createObjectURL(await res.blob());
       const a = document.createElement("a");
       a.href = url;
-      a.download = `tailored-resume.${format}`;
+      a.download = `tailored-resume-${template}.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -520,6 +528,19 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
 
           <h3>Full resume</h3>
           <pre className={styles.preview}>{t.tailored}</pre>
+          <fieldset className={styles.templates}>
+            <legend className={base.label}>Template</legend>
+            {TEMPLATE_CHOICES.map((c) => (
+              <label key={c.id} className={`${styles.template} ${template === c.id ? styles.templateOn : ""}`}>
+                <input type="radio" name="template" value={c.id} checked={template === c.id} onChange={() => setTemplate(c.id)} />
+                <span>
+                  <strong>{c.label}</strong>
+                  <span className={base.hint}>{c.description}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+          <p className={base.hint}>Every template fits the resume on one page when it can, by tightening spacing and type down to 9 pt.</p>
           <div className={styles.row}>
             <button type="button" className={base.button} disabled={exporting !== null} onClick={() => download("pdf")}>
               {exporting === "pdf" ? "Preparing…" : "Download PDF"}

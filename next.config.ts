@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Export reads its fonts from disk at runtime, so they must ship with that route's serverless function.
+  outputFileTracingIncludes: {
+    "/api/agent/export": ["./assets/fonts/**/*"],
+  },
   // Security headers on every response (SEC-WEB-02, SEC-DATA-01). The page CSP is set per request in src/proxy.ts.
   async headers() {
     return [

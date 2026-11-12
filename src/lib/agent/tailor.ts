@@ -114,7 +114,8 @@ export function applyRewrites(args: {
     const banned = BANNED_OPENINGS.find((b) => text.toLowerCase().startsWith(b.toLowerCase()));
     if (banned) reasons.push({ type: "banned_opening", text: text.slice(0, banned.length) });
     for (const m of text.matchAll(PLACEHOLDER)) reasons.push({ type: "placeholder", text: m[0] });
-    const maxLength = Math.max(300, bullet.text.length * 2);
+    // Rewrites stay close to the original length, so a full one-page resume still fits on one page.
+    const maxLength = Math.max(160, Math.round(bullet.text.length * 1.35));
     if (text.length > maxLength) reasons.push({ type: "too_long", text: `${text.length} characters (limit ${maxLength})` });
     const baseline = notes?.trim() ? `${bullet.text}\n${notes}` : bullet.text;
     reasons.push(...checkFn({ candidate: text, source, posting, baseline }));
@@ -189,7 +190,7 @@ const TAILOR_TASK = `Task: rewrite the bullets in <bullets> that can be made str
 - Never mention anything listed in <gaps>. The client has no evidence for those.
 - Don't upgrade the client's role: don't write led, managed, owned, directed, spearheaded or similar unless that bullet or the notes already say so.
 - No placeholders and no square brackets. If a bullet has no number in the facts, its rewrite has none either.
-- Keep each rewrite to one sentence of at most 35 words, with no ending period.`;
+- Keep each rewrite about as long as the original bullet and never more than a third longer, so the resume still fits on one page. One sentence, with no ending period unless the original has one.`;
 
 /** Builds the tailor request. Every input sits in its own delimited data block (SEC-LLM-01). */
 export function buildTailorPrompt(ctx: TailorContext): AgentPrompt {

@@ -1,6 +1,6 @@
 import { anthropicAgentModel } from "@/lib/agent/anthropic";
 import { check } from "@/lib/agent/check";
-import { ExportError, exportDocx, exportPdf } from "@/lib/agent/export";
+import { ExportError, exportDocx, exportPdf, TEMPLATES, type TemplateId } from "@/lib/agent/export";
 import { composeSource, runDecide, type AgentErrorCode, type RunOptions } from "@/lib/agent/run";
 import { simulatedModel } from "@/lib/agent/simulated";
 import { runTailor } from "@/lib/agent/tailor";
@@ -116,13 +116,13 @@ export function createAgentRunHandler(deps: AgentDeps) {
 }
 
 const FORMATS = {
-  pdf: { type: "application/pdf", file: "tailored-resume.pdf" },
-  docx: { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", file: "tailored-resume.docx" },
+  pdf: "application/pdf",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 } as const;
 
 /**
  * POST /api/agent/export: re-runs the checker on the tailored resume against the source facts, then
- * returns a PDF or DOCX (REQ-AG-41, REQ-AG-43). The file is built for this request and never stored.
+ * returns a PDF or DOCX in the chosen template (REQ-AG-41, REQ-AG-43). The file is built for this request and never stored.
  * Until packets are stored on the server, the source facts come from the page, so this re-check stops
  * an edited resume, not a page that also edits its source facts.
  */
@@ -133,6 +133,8 @@ export function createAgentExportHandler(deps: Pick<AgentDeps, "exportLimiter">)
     if (!body) return errorResponse(400, "bad_request", "The request could not be read.");
     const format = body.format;
     if (format !== "pdf" && format !== "docx") return errorResponse(400, "bad_request", "Choose PDF or DOCX.");
+    const template = (body.template ?? "classic") as TemplateId;
+    if (!TEMPLATES.includes(template)) return errorResponse(400, "bad_request", "Choose the Classic, Modern or Compact template.");
     const tailored = body.tailored;
     if (typeof tailored !== "string" || !tailored.trim() || tailored.length > MAX_RESUME_CHARS) {
       return errorResponse(400, "bad_request", "The request could not be read.");
@@ -155,12 +157,12 @@ export function createAgentExportHandler(deps: Pick<AgentDeps, "exportLimiter">)
     }
 
     try {
-      const bytes = format === "pdf" ? await exportPdf(tailored) : exportDocx(tailored);
+      const bytes = format === "pdf" ? await exportPdf(tailored, template) : await exportDocx(tailored, template);
       return new Response(new Blob([bytes as BlobPart]), {
         status: 200,
         headers: {
-          "content-type": FORMATS[format].type,
-          "content-disposition": `attachment; filename="${FORMATS[format].file}"`,
+          "content-type": FORMATS[format],
+          "content-disposition": `attachment; filename="tailored-resume-${template}.${format}"`,
           "cache-control": "no-store",
         },
       });

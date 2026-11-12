@@ -59,21 +59,24 @@ describe("agent run API", () => {
 });
 
 describe("agent export API", () => {
-  const exportReq = (tailored: string, format: string) =>
-    post("/api/agent/export", { tailored, format, resumeText: SAMPLE_RESUME, notes: SAMPLE_NOTES, posting: SAMPLE_POSTING });
+  const exportReq = (tailored: string, format: string, template?: string) =>
+    post("/api/agent/export", { tailored, format, template, resumeText: SAMPLE_RESUME, notes: SAMPLE_NOTES, posting: SAMPLE_POSTING });
 
   it("test_export_returns_files", async () => {
     const handler = createAgentExportHandler(deps());
     const docx = await handler(exportReq(SAMPLE_RESUME, "docx"));
     expect(docx.status).toBe(200);
-    expect(docx.headers.get("content-disposition")).toContain("tailored-resume.docx");
+    expect(docx.headers.get("content-disposition")).toContain("tailored-resume-classic.docx");
     expect(extractDocx(new Uint8Array(await docx.arrayBuffer())).text).toContain("Jordan Lee");
-    const pdf = await handler(exportReq(SAMPLE_RESUME, "pdf"));
+    const pdf = await handler(exportReq(SAMPLE_RESUME, "pdf", "modern"));
     expect(pdf.headers.get("content-type")).toBe("application/pdf");
+    expect(pdf.headers.get("content-disposition")).toContain("tailored-resume-modern.pdf");
+    expect((await handler(exportReq(SAMPLE_RESUME, "pdf", "fancy"))).status).toBe(400);
   });
 
   it("test_export_refused_when_checker_finds_anything", async () => {
-    const edited = SAMPLE_RESUME.replace("cut monthly reconciliation time by 6 hours", "cut monthly reconciliation time by 60 hours using Tableau");
+    const edited = SAMPLE_RESUME.replace("cut monthly reconciliation time by 6 hours", "cut monthly reconciliation time by 7 hours using Tableau");
+    expect(edited).not.toBe(SAMPLE_RESUME);
     const res = await createAgentExportHandler(deps())(exportReq(edited, "pdf"));
     expect(res.status).toBe(422);
     const body = await res.json();

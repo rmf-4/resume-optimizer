@@ -1,11 +1,17 @@
-// Export of the tailored resume as DOCX and PDF (REQ-AG-41, REQ-AG-42, REQ-AG-44).
-// One plain layout (A-58). Files are built per request and never stored.
+// Export of the tailored resume in one of three templates, as PDF or DOCX (REQ-AG-41, REQ-AG-42, REQ-AG-44).
+// The PDF embeds open fonts; the DOCX names the Word font each one matches, and uses the same scale the PDF
+// needed to fit, so both formats look and fit alike. Files are built per request and never stored.
 
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import fontkit from "@pdf-lib/fontkit";
 import { strToU8, zipSync } from "fflate";
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { PDFDocument, rgb, type PDFFont, type RGB } from "pdf-lib";
+import { parseResume, type Block } from "./structure";
 
-export type LayoutKind = "name" | "heading" | "bullet" | "line" | "blank";
-export type LayoutLine = { kind: LayoutKind; text: string };
+export const TEMPLATES = ["classic", "modern", "compact"] as const;
+export type TemplateId = (typeof TEMPLATES)[number];
+export const TEMPLATE_LABELS: Record<TemplateId, string> = { classic: "Classic", modern: "Modern", compact: "Compact" };
 
 export class ExportError extends Error {
   constructor(
@@ -18,52 +24,384 @@ export class ExportError extends Error {
   }
 }
 
-const BULLET = /^\s*[•▪◦‣∙·●○■□➢➤►✓✔\-*–—]\s+/;
-const SECTION_NAME =
-  /^(?:summary|profile|objective|(?:work |professional |relevant )?experience|employment(?: history)?|education|(?:technical )?skills?(?: (?:&|and) interests)?|interests|projects?|(?:leadership|volunteer)(?: experience)?|activities|certifications?(?: (?:&|and) licenses)?|licenses|awards|honors|publications|additional information|languages|(?:relevant )?coursework)$/i;
+// ---------- templates ----------
 
-function isHeading(line: string): boolean {
-  const t = line.trim().replace(/:$/, "");
-  if (t.length === 0 || t.length > 40) return false;
-  if (SECTION_NAME.test(t)) return true;
-  return /^[A-Z][A-Z &/-]{2,}$/.test(t) && t.split(/\s+/).length <= 4;
+type FontFiles = { regular: string; bold: string; italic: string; docx: string };
+type Hex = string;
+
+type Style = {
+  fonts: FontFiles;
+  margin: { x: number; y: number };
+  leading: number;
+  body: number;
+  name: { size: number; align: "center" | "left"; color: Hex };
+  contact: { size: number; align: "center" | "left"; color: Hex };
+  heading: { size: number; upper: boolean; color: Hex; rule: Hex | null; ruleWidth: number; before: number; after: number };
+  entryBefore: number;
+  secondaryItalic: boolean;
+  right: { italic: boolean; color: Hex };
+  bullet: { glyphX: number; indent: number };
+};
+
+const BLACK = "#000000";
+
+export const STYLES: Record<TemplateId, Style> = {
+  // Traditional one-page business resume: serif, centred name, ruled capital headings, dates on the right.
+  classic: {
+    fonts: { regular: "LiberationSerif-Regular", bold: "LiberationSerif-Bold", italic: "LiberationSerif-Italic", docx: "Times New Roman" },
+    margin: { x: 43, y: 36 },
+    leading: 1.17,
+    body: 10.5,
+    name: { size: 20, align: "center", color: BLACK },
+    contact: { size: 9.5, align: "center", color: BLACK },
+    heading: { size: 11.5, upper: true, color: BLACK, rule: BLACK, ruleWidth: 0.8, before: 8, after: 4 },
+    entryBefore: 4,
+    secondaryItalic: false,
+    right: { italic: false, color: BLACK },
+    bullet: { glyphX: 5, indent: 15 },
+  },
+  // Sans serif with a navy accent: left-aligned name, title-case headings, roles in italics.
+  modern: {
+    fonts: { regular: "Lato-Regular", bold: "Lato-Bold", italic: "Lato-Italic", docx: "Calibri" },
+    margin: { x: 50, y: 40 },
+    leading: 1.2,
+    body: 11,
+    name: { size: 24, align: "left", color: "#1F3A5F" },
+    contact: { size: 10, align: "left", color: "#4A5260" },
+    heading: { size: 12.5, upper: false, color: "#1F3A5F", rule: "#9AA8BC", ruleWidth: 0.6, before: 10, after: 4 },
+    entryBefore: 5,
+    secondaryItalic: true,
+    right: { italic: false, color: "#4A5260" },
+    bullet: { glyphX: 4, indent: 14 },
+  },
+  // Dense layout for a full page: small sans serif, tight spacing, grey rules.
+  compact: {
+    fonts: { regular: "LiberationSans-Regular", bold: "LiberationSans-Bold", italic: "LiberationSans-Italic", docx: "Arial" },
+    margin: { x: 36, y: 30 },
+    leading: 1.13,
+    body: 9.5,
+    name: { size: 16, align: "left", color: BLACK },
+    contact: { size: 9, align: "left", color: "#333333" },
+    heading: { size: 10, upper: true, color: BLACK, rule: "#8C8C8C", ruleWidth: 0.6, before: 6, after: 2.5 },
+    entryBefore: 3,
+    secondaryItalic: true,
+    right: { italic: false, color: "#333333" },
+    bullet: { glyphX: 3, indent: 11 },
+  },
+};
+
+const PAGE_W = 612;
+const PAGE_H = 792;
+/** Smallest body size the fit may shrink to. Below this a resume flows onto a second page instead. */
+const MIN_BODY = 9;
+
+// ---------- fonts ----------
+
+const fontCache = new Map<string, Uint8Array>();
+function fontBytes(name: string): Uint8Array {
+  let bytes = fontCache.get(name);
+  if (!bytes) {
+    bytes = new Uint8Array(readFileSync(path.join(process.cwd(), "assets", "fonts", `${name}.ttf`)));
+    fontCache.set(name, bytes);
+  }
+  return bytes;
 }
 
-/** Classifies each line of the resume for the export layout. Text is kept as written. */
-export function layoutLines(text: string): LayoutLine[] {
-  let nameSeen = false;
-  return text.split(/\r?\n/).map((raw): LayoutLine => {
-    const line = raw.replace(/\t/g, " ").trimEnd();
-    if (!line.trim()) return { kind: "blank", text: "" };
-    if (!nameSeen) {
-      nameSeen = true;
-      return { kind: "name", text: line.trim() };
+type GlyphFont = { hasGlyphForCodePoint(cp: number): boolean };
+const glyphCache = new Map<string, GlyphFont>();
+function glyphFont(name: string): GlyphFont {
+  let f = glyphCache.get(name);
+  if (!f) {
+    f = fontkit.create(Buffer.from(fontBytes(name))) as unknown as GlyphFont;
+    glyphCache.set(name, f);
+  }
+  return f;
+}
+
+/** Characters a font may lack, swapped for look-alikes (REQ-AG-42). Applied only when the glyph is missing. */
+const LOOKALIKES: Record<string, string> = {
+  "→": "->", "←": "<-", "↔": "<->", "⇒": "=>", "≥": ">=", "≤": "<=", "≠": "!=", "≈": "~", "−": "-",
+  "✓": "-", "✔": "-", "✗": "x", "✘": "x", "′": "'", "″": '"', " ": " ", " ": " ", " ": " ", " ": " ",
+};
+
+/** Applies look-alikes for glyphs the template's fonts lack, and throws naming any character still missing. */
+function prepareText(blocks: Block[], style: Style): Block[] {
+  const fonts = [style.fonts.regular, style.fonts.bold, style.fonts.italic].map(glyphFont);
+  const missing = new Set<string>();
+  const fix = (s: string) =>
+    [...s.replace(/[\u0000-\u0008\u000B-\u001F]/g, "").replace(/\t/g, " ")]
+      .map((c) => {
+        const cp = c.codePointAt(0)!;
+        if (fonts.every((f) => f.hasGlyphForCodePoint(cp))) return c;
+        const swap = LOOKALIKES[c];
+        if (swap !== undefined) return swap;
+        missing.add(c);
+        return c;
+      })
+      .join("");
+  const out = blocks.map((b): Block => {
+    switch (b.kind) {
+      case "entry":
+        return { ...b, left: fix(b.left), right: fix(b.right) };
+      case "labeled":
+        return { ...b, label: fix(b.label), text: fix(b.text) };
+      default:
+        return { ...b, text: fix(b.text) };
     }
-    if (BULLET.test(line)) return { kind: "bullet", text: line.replace(BULLET, "").trim() };
-    if (isHeading(line)) return { kind: "heading", text: line.trim() };
-    return { kind: "line", text: line.trim() };
   });
+  if (missing.size > 0) {
+    const chars = [...missing];
+    throw new ExportError(
+      "unsupported_characters",
+      `The PDF font can't show ${chars.map((c) => `"${c}"`).join(", ")}. Download the DOCX instead, or remove those characters.`,
+      chars,
+    );
+  }
+  return out;
+}
+
+function titleCase(s: string): string {
+  const small = new Set(["a", "an", "and", "the", "of", "for", "in", "on", "to", "&"]);
+  return s
+    .toLowerCase()
+    .split(/(\s+|\/)/)
+    .map((w, i) => (i > 0 && small.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join("");
+}
+
+function headingText(text: string, style: Style): string {
+  return style.heading.upper ? text.toUpperCase() : text === text.toUpperCase() ? titleCase(text) : text;
+}
+
+function hexToRgb(hex: Hex): RGB {
+  const n = parseInt(hex.slice(1), 16);
+  return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
+}
+
+// ---------- layout ----------
+
+type Fonts = { regular: PDFFont; bold: PDFFont; italic: PDFFont };
+type Seg = { text: string; font: PDFFont };
+type TextOp = { page: number; x: number; y: number; text: string; font: PDFFont; size: number; color: Hex };
+type RuleOp = { page: number; x1: number; x2: number; y: number; width: number; color: Hex };
+type Layout = { pages: number; texts: TextOp[]; rules: RuleOp[] };
+
+function segWidth(seg: Seg, size: number): number {
+  return seg.font.widthOfTextAtSize(seg.text, size);
+}
+
+/** Greedy word wrap over runs in different fonts. Returns lines of runs. */
+function wrapSegs(segs: Seg[], size: number, maxWidth: number): Seg[][] {
+  type Word = { text: string; font: PDFFont; space: boolean };
+  const words: Word[] = [];
+  for (const s of segs) {
+    s.text.split(/ +/).forEach((w, i) => {
+      if (w) words.push({ text: w, font: s.font, space: i > 0 || s.text.startsWith(" ") });
+    });
+  }
+  const lines: Seg[][] = [];
+  let line: Seg[] = [];
+  let width = 0;
+  const push = (w: Word, withSpace: boolean) => {
+    const text = (withSpace ? " " : "") + w.text;
+    const last = line[line.length - 1];
+    if (last && last.font === w.font) last.text += text;
+    else line.push({ text, font: w.font });
+    width += w.font.widthOfTextAtSize(text, size);
+  };
+  for (const w of words) {
+    const add = (line.length && w.space ? w.font.widthOfTextAtSize(" ", size) : 0) + w.font.widthOfTextAtSize(w.text, size);
+    if (line.length && width + add > maxWidth) {
+      lines.push(line);
+      line = [];
+      width = 0;
+    }
+    let word = w;
+    // A single word wider than the line is broken by characters.
+    while (!line.length && word.font.widthOfTextAtSize(word.text, size) > maxWidth && word.text.length > 1) {
+      let cut = word.text.length - 1;
+      while (cut > 1 && word.font.widthOfTextAtSize(word.text.slice(0, cut), size) > maxWidth) cut--;
+      lines.push([{ text: word.text.slice(0, cut), font: word.font }]);
+      word = { ...word, text: word.text.slice(cut) };
+    }
+    push(word, line.length > 0 && word.space);
+  }
+  if (line.length) lines.push(line);
+  return lines;
+}
+
+function layout(blocks: Block[], style: Style, fonts: Fonts, scale: number): Layout {
+  const sc = (n: number) => n * scale;
+  const mx = style.margin.x;
+  const my = sc(style.margin.y);
+  const width = PAGE_W - 2 * mx;
+  const texts: TextOp[] = [];
+  const rules: RuleOp[] = [];
+  let page = 0;
+  let y = PAGE_H - my;
+
+  const advance = (h: number) => {
+    if (y - h < my) {
+      page++;
+      y = PAGE_H - my;
+    }
+    y -= h;
+  };
+  const drawLine = (segs: Seg[], x: number, size: number, color: Hex) => {
+    let cx = x;
+    for (const s of segs) {
+      texts.push({ page, x: cx, y, text: s.text, font: s.font, size, color });
+      cx += segWidth(s, size);
+    }
+  };
+  const lineWidth = (segs: Seg[], size: number) => segs.reduce((w, s) => w + segWidth(s, size), 0);
+  const paragraph = (segs: Seg[], size: number, color: Hex, x: number, maxWidth: number, align: "left" | "center" = "left") => {
+    for (const l of wrapSegs(segs, size, maxWidth)) {
+      advance(size * style.leading);
+      const lx = align === "center" ? x + (maxWidth - lineWidth(l, size)) / 2 : x;
+      drawLine(l, lx, size, color);
+    }
+  };
+
+  const body = sc(style.body);
+  let prev: Block | null = null;
+  for (const b of blocks) {
+    switch (b.kind) {
+      case "name":
+        paragraph([{ text: b.text, font: fonts.bold }], sc(style.name.size), style.name.color, mx, width, style.name.align);
+        y -= sc(2);
+        break;
+      case "contact":
+        paragraph([{ text: b.text, font: fonts.regular }], sc(style.contact.size), style.contact.color, mx, width, style.contact.align);
+        break;
+      case "heading": {
+        const h = style.heading;
+        y -= sc(h.before);
+        if (y - sc(h.size) * 3 < my) {
+          // Keep a heading with what follows it.
+          page++;
+          y = PAGE_H - my;
+        }
+        paragraph([{ text: headingText(b.text, style), font: fonts.bold }], sc(h.size), h.color, mx, width);
+        if (h.rule) {
+          rules.push({ page, x1: mx, x2: PAGE_W - mx, y: y - sc(2.5), width: h.ruleWidth, color: h.rule });
+          y -= sc(2.5);
+        }
+        y -= sc(h.after);
+        break;
+      }
+      case "entry": {
+        if (b.level === "primary" && prev && prev.kind !== "heading") y -= sc(style.entryBefore);
+        const leftFont = b.level === "primary" ? fonts.bold : style.secondaryItalic ? fonts.italic : fonts.regular;
+        const rightFont = style.right.italic ? fonts.italic : fonts.regular;
+        const rightW = b.right ? rightFont.widthOfTextAtSize(b.right, body) : 0;
+        const lines = wrapSegs([{ text: b.left, font: leftFont }], body, width - (rightW ? rightW + 12 : 0));
+        lines.forEach((l, i) => {
+          advance(body * style.leading);
+          drawLine(l, mx, body, BLACK);
+          if (i === 0 && b.right) texts.push({ page, x: PAGE_W - mx - rightW, y, text: b.right, font: rightFont, size: body, color: style.right.color });
+        });
+        break;
+      }
+      case "bullet": {
+        const lines = wrapSegs([{ text: b.text, font: fonts.regular }], body, width - sc(style.bullet.indent));
+        lines.forEach((l, i) => {
+          advance(body * style.leading);
+          if (i === 0) texts.push({ page, x: mx + sc(style.bullet.glyphX), y, text: "•", font: fonts.regular, size: body, color: BLACK });
+          drawLine(l, mx + sc(style.bullet.indent), body, BLACK);
+        });
+        break;
+      }
+      case "labeled":
+        paragraph([{ text: `${b.label}:`, font: fonts.bold }, { text: ` ${b.text}`, font: fonts.regular }], body, BLACK, mx, width);
+        break;
+      default:
+        paragraph([{ text: b.text, font: fonts.regular }], body, BLACK, mx, width);
+    }
+    prev = b;
+  }
+  return { pages: page + 1, texts, rules };
+}
+
+/** The largest scale (≤ 1) at which the resume fits one page without the body text going below 9 pt; 1 if it can't. */
+function fitScale(blocks: Block[], style: Style, fonts: Fonts): number {
+  const min = MIN_BODY / style.body;
+  for (let s = 1; s >= min - 1e-9; s -= 0.02) {
+    if (layout(blocks, style, fonts, s).pages === 1) return Math.round(s * 1000) / 1000;
+  }
+  return 1;
+}
+
+async function loadFonts(doc: PDFDocument, style: Style): Promise<Fonts> {
+  doc.registerFontkit(fontkit);
+    // Ligatures off: every glyph in the text layer stays one letter, so the PDF reads back exactly (ATS).
+  const embed = (name: string) =>
+    doc.embedFont(fontBytes(name), { subset: true, customName: name, features: { liga: false, clig: false, dlig: false } });
+  const [regular, bold, italic] = await Promise.all([embed(style.fonts.regular), embed(style.fonts.bold), embed(style.fonts.italic)]);
+  return { regular, bold, italic };
+}
+
+/** Lays the resume out in a template and works out the scale that fits it on one page. */
+async function planFor(text: string, template: TemplateId) {
+  const style = STYLES[template];
+  const blocks = prepareText(parseResume(text), style);
+  const doc = await PDFDocument.create({ updateMetadata: false });
+  const fonts = await loadFonts(doc, style);
+  const scale = fitScale(blocks, style, fonts);
+  return { style, blocks, doc, fonts, scale };
+}
+
+/**
+ * Builds the PDF. Fails with ExportError, naming the characters, if the fonts can't show some of the
+ * text after look-alike swaps. No metadata is written (SEC-EXP-01).
+ */
+export async function exportPdf(text: string, template: TemplateId = "classic"): Promise<Uint8Array> {
+  const { style, blocks, doc, fonts, scale } = await planFor(text, template);
+  const out = layout(blocks, style, fonts, scale);
+  const pages = Array.from({ length: out.pages }, () => doc.addPage([PAGE_W, PAGE_H]));
+  for (const r of out.rules) {
+    pages[r.page].drawLine({ start: { x: r.x1, y: r.y }, end: { x: r.x2, y: r.y }, thickness: r.width, color: hexToRgb(r.color) });
+  }
+  for (const t of out.texts) pages[t.page].drawText(t.text, { x: t.x, y: t.y, size: t.size, font: t.font, color: hexToRgb(t.color) });
+  return doc.save();
 }
 
 // ---------- DOCX ----------
 
-function xmlEscape(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-// XML 1.0 can't hold most control characters.
 function xmlSafe(s: string): string {
-  return xmlEscape(s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ""));
+  return s
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
-function docxParagraph(text: string, opts: { bold?: boolean; size: number; before?: number; after?: number; indent?: boolean; rule?: boolean }): string {
+type RunOpts = { bold?: boolean; italic?: boolean; size: number; color?: Hex };
+
+function run(text: string, font: string, o: RunOpts): string {
+  const rPr =
+    `<w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:cs="${font}" w:eastAsia="${font}"/>` +
+    (o.bold ? "<w:b/>" : "") +
+    (o.italic ? "<w:i/>" : "") +
+    (o.color && o.color !== BLACK ? `<w:color w:val="${o.color.slice(1)}"/>` : "") +
+    `<w:sz w:val="${Math.round(o.size * 2)}"/><w:szCs w:val="${Math.round(o.size * 2)}"/>`;
+  return `<w:r><w:rPr>${rPr}</w:rPr><w:t xml:space="preserve">${xmlSafe(text)}</w:t></w:r>`;
+}
+
+const TAB_RUN = "<w:r><w:tab/></w:r>";
+const twips = (pt: number) => Math.round(pt * 20);
+
+function paragraph(runs: string, o: { before?: number; after?: number; align?: "center" | "left"; rightTab?: number; indent?: { left: number; hanging: number }; rule?: { color: Hex; width: number }; keepNext?: boolean; line: number }): string {
   const pPr = [
-    opts.rule ? '<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="808080"/></w:pBdr>' : "",
-    `<w:spacing w:before="${opts.before ?? 0}" w:after="${opts.after ?? 40}"/>`,
-    opts.indent ? '<w:ind w:left="300" w:hanging="200"/>' : "",
+    o.keepNext ? "<w:keepNext/>" : "",
+    o.rule ? `<w:pBdr><w:bottom w:val="single" w:sz="${Math.max(2, Math.round(o.rule.width * 8))}" w:space="1" w:color="${o.rule.color.slice(1)}"/></w:pBdr>` : "",
+    o.rightTab !== undefined ? `<w:tabs><w:tab w:val="right" w:pos="${o.rightTab}"/></w:tabs>` : "",
+    `<w:spacing w:before="${twips(o.before ?? 0)}" w:after="${twips(o.after ?? 0)}" w:line="${o.line}" w:lineRule="auto"/>`,
+    o.indent ? `<w:ind w:left="${twips(o.indent.left)}" w:hanging="${twips(o.indent.hanging)}"/>` : "",
+    o.align === "center" ? '<w:jc w:val="center"/>' : "",
   ].join("");
-  const rPr = `<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri" w:eastAsia="Calibri"/>${opts.bold ? "<w:b/>" : ""}<w:sz w:val="${opts.size}"/>`;
-  return `<w:p><w:pPr>${pPr}</w:pPr><w:r><w:rPr>${rPr}</w:rPr><w:t xml:space="preserve">${xmlSafe(text)}</w:t></w:r></w:p>`;
+  return `<w:p><w:pPr>${pPr}</w:pPr>${runs}</w:p>`;
 }
 
 const CONTENT_TYPES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -73,27 +411,68 @@ const ROOT_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
 
 /**
- * Builds a minimal DOCX: content types, one relationship and the document. There is no docProps part,
- * so author, company, dates and the rest are blank by construction (SEC-EXP-01). Same input, same bytes.
+ * Builds a minimal DOCX in the template, at the scale the PDF needed to fit one page. There is no docProps
+ * part, so author, company, dates and the rest are blank by construction (SEC-EXP-01). Same input, same bytes.
  */
-export function exportDocx(text: string): Uint8Array {
-  const body = layoutLines(text)
-    .filter((l) => l.kind !== "blank")
-    .map((l) => {
-      switch (l.kind) {
-        case "name":
-          return docxParagraph(l.text, { bold: true, size: 32, after: 60 });
-        case "heading":
-          return docxParagraph(l.text, { bold: true, size: 22, before: 200, after: 80, rule: true });
-        case "bullet":
-          return docxParagraph(`• ${l.text}`, { size: 21, indent: true });
-        default:
-          return docxParagraph(l.text, { size: 21 });
+export async function exportDocx(text: string, template: TemplateId = "classic"): Promise<Uint8Array> {
+  const { style, blocks, scale } = await planFor(text, template).catch((e) => {
+    // DOCX has no font limit: plan with the raw text if the PDF fonts lack a character.
+    if (e instanceof ExportError) return { style: STYLES[template], blocks: parseResume(text), scale: 1 };
+    throw e;
+  });
+  const sc = (n: number) => n * scale;
+  const font = style.fonts.docx;
+  const body = sc(style.body);
+  const line = Math.round((240 * style.leading) / 1.15);
+  const textWidth = twips(PAGE_W - 2 * style.margin.x);
+
+  let prev: Block | null = null;
+  const paras = blocks.map((b) => {
+    let p: string;
+    switch (b.kind) {
+      case "name":
+        p = paragraph(run(b.text, font, { bold: true, size: sc(style.name.size), color: style.name.color }), { align: style.name.align, after: sc(2), line });
+        break;
+      case "contact":
+        p = paragraph(run(b.text, font, { size: sc(style.contact.size), color: style.contact.color }), { align: style.contact.align, line });
+        break;
+      case "heading": {
+        const h = style.heading;
+        p = paragraph(run(headingText(b.text, style), font, { bold: true, size: sc(h.size), color: h.color }), {
+          before: sc(h.before),
+          after: sc(h.after),
+          rule: h.rule ? { color: h.rule, width: h.ruleWidth } : undefined,
+          keepNext: true,
+          line,
+        });
+        break;
       }
-    })
-    .join("");
+      case "entry": {
+        const left = run(b.left, font, { bold: b.level === "primary", italic: b.level === "secondary" && style.secondaryItalic, size: body });
+        const right = b.right ? TAB_RUN + run(b.right, font, { italic: style.right.italic, size: body, color: style.right.color }) : "";
+        const before = b.level === "primary" && prev && prev.kind !== "heading" ? sc(style.entryBefore) : 0;
+        p = paragraph(left + right, { before, rightTab: textWidth, keepNext: true, line });
+        break;
+      }
+      case "bullet":
+        p = paragraph(run("•", font, { size: body }) + TAB_RUN + run(b.text, font, { size: body }), {
+          indent: { left: sc(style.bullet.indent), hanging: sc(style.bullet.indent - style.bullet.glyphX) },
+          line,
+        });
+        break;
+      case "labeled":
+        p = paragraph(run(`${b.label}:`, font, { bold: true, size: body }) + run(` ${b.text}`, font, { size: body }), { line });
+        break;
+      default:
+        p = paragraph(run(b.text, font, { size: body }), { line });
+    }
+    prev = b;
+    return p;
+  });
+
+  const m = { x: twips(style.margin.x), y: twips(sc(style.margin.y)) };
   const document = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paras.join("")}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="${m.y}" w:right="${m.x}" w:bottom="${m.y}" w:left="${m.x}" w:header="360" w:footer="360" w:gutter="0"/></w:sectPr></w:body></w:document>`;
 
   const mtime = new Date(1980, 0, 1);
   return zipSync(
@@ -104,128 +483,4 @@ export function exportDocx(text: string): Uint8Array {
     },
     { level: 6 },
   );
-}
-
-// ---------- PDF ----------
-
-/** Characters Helvetica can't show, swapped for look-alikes it can (REQ-AG-42). */
-const LOOKALIKES: Record<string, string> = {
-  "→": "->", "←": "<-", "↔": "<->", "⇒": "=>", "≥": ">=", "≤": "<=", "≠": "!=", "≈": "~", "−": "-",
-  "✓": "-", "✔": "-", "✗": "x", "✘": "x", "′": "'", "″": '"',
-  " ": " ", " ": " ", " ": " ", " ": " ",
-};
-
-const PAGE_W = 612;
-const PAGE_H = 792;
-const MARGIN = 54;
-const BODY = 10.5;
-
-function swapLookalikes(s: string): string {
-  return [...s].map((c) => LOOKALIKES[c] ?? c).join("");
-}
-
-function wrap(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
-  const out: string[] = [];
-  let line = "";
-  for (const word of text.split(/ +/)) {
-    const candidate = line ? `${line} ${word}` : word;
-    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
-      line = candidate;
-      continue;
-    }
-    if (line) out.push(line);
-    // A single word wider than the line is broken by characters.
-    let rest = word;
-    while (font.widthOfTextAtSize(rest, size) > maxWidth) {
-      let cut = rest.length - 1;
-      while (cut > 1 && font.widthOfTextAtSize(rest.slice(0, cut), size) > maxWidth) cut--;
-      out.push(rest.slice(0, cut));
-      rest = rest.slice(cut);
-    }
-    line = rest;
-  }
-  if (line) out.push(line);
-  return out;
-}
-
-/**
- * Builds a PDF in the plain layout. Fails with ExportError, naming the characters, if the text has any
- * the font can't show after look-alike swaps. No metadata is written (SEC-EXP-01). Same input, same bytes.
- */
-export async function exportPdf(text: string): Promise<Uint8Array> {
-  const doc = await PDFDocument.create({ updateMetadata: false });
-  const regular = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-
-  const lines = layoutLines(text).map((l) => ({ ...l, text: swapLookalikes(l.text) }));
-  const unshowable = new Set<string>();
-  for (const l of lines) {
-    for (const c of l.text) {
-      try {
-        regular.encodeText(c);
-        bold.encodeText(c);
-      } catch {
-        unshowable.add(c);
-      }
-    }
-  }
-  if (unshowable.size > 0) {
-    const chars = [...unshowable];
-    throw new ExportError(
-      "unsupported_characters",
-      `The PDF font can't show ${chars.map((c) => `"${c}"`).join(", ")}. Download the DOCX instead, or remove those characters.`,
-      chars,
-    );
-  }
-
-  let page: PDFPage = doc.addPage([PAGE_W, PAGE_H]);
-  let y = PAGE_H - MARGIN;
-  const width = PAGE_W - 2 * MARGIN;
-  const room = (h: number) => {
-    if (y - h < MARGIN) {
-      page = doc.addPage([PAGE_W, PAGE_H]);
-      y = PAGE_H - MARGIN;
-    }
-  };
-  const drawWrapped = (s: string, font: PDFFont, size: number, x: number, maxWidth: number, lead: number) => {
-    for (const part of wrap(s, font, size, maxWidth)) {
-      room(lead);
-      y -= lead;
-      page.drawText(part, { x, y, size, font });
-    }
-  };
-
-  let first = true;
-  for (const l of lines) {
-    switch (l.kind) {
-      case "blank":
-        y -= 4;
-        break;
-      case "name":
-        drawWrapped(l.text, bold, 16, MARGIN, width, 18);
-        y -= 4;
-        break;
-      case "heading":
-        if (!first) y -= 8;
-        room(30);
-        drawWrapped(l.text, bold, 11, MARGIN, width, 14);
-        page.drawLine({ start: { x: MARGIN, y: y - 3 }, end: { x: PAGE_W - MARGIN, y: y - 3 }, thickness: 0.6, color: rgb(0.5, 0.5, 0.5) });
-        y -= 6;
-        break;
-      case "bullet": {
-        const parts = wrap(l.text, regular, BODY, width - 14);
-        parts.forEach((part, i) => {
-          room(13);
-          y -= 13;
-          if (i === 0) page.drawText("•", { x: MARGIN + 3, y, size: BODY, font: regular });
-          page.drawText(part, { x: MARGIN + 14, y, size: BODY, font: regular });
-        });
-        break;
-      }
-      default:
-        drawWrapped(l.text, regular, BODY, MARGIN, width, 13);
-    }
-    first = false;
-  }
-  return doc.save();
 }

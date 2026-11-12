@@ -131,3 +131,41 @@
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+.templates {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.templates legend {
+  margin-bottom: 8px;
+}
+
+.template {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.template > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.template input {
+  margin-top: 4px;
+}
+
+.templateOn {
+  border-color: var(--accent);
+  background: var(--note-bg);
+}
