@@ -31,6 +31,7 @@ IDs from `requirements.md` / `SECURITY_SPEC.md` are reused where the criterion i
 - **REQ-IN-05** *(partial)* Exclude hidden text and warn, quoting it. Covered today: DOCX hidden runs, white text and text under 4 pt; PDF text under 4 pt. PDF text positioned off-page is excluded (the PDF library drops it), but it can't be quoted in the warning. **Not yet:** PDF text coloured like the background.
 - **REQ-IN-06** Accept the job description as pasted text of at most 20,000 characters, or as a PDF/DOCX file (built in HW3 as US-IN-2; see `requirements.md` "Scope for HW3").
 - **REQ-IN-07** Block analysis if the job description is under 300 characters after trimming.
+- **REQ-IN-08** Accept optional notes as pasted text of at most 10,000 characters after trimming. Added 2026-11-05 for the agent's source facts (`AGENT_SPEC.md`).
 - **REQ-S1-01** Block analysis if the confirmed resume text is over 50,000 characters (keeps input under the SEC-LLM-09 token cap).
 
 ### Step 1 output
@@ -38,6 +39,7 @@ IDs from `requirements.md` / `SECURITY_SPEC.md` are reused where the criterion i
 - **REQ-GEN-03** 8–12 keywords, each with exactly one category (hard skill, soft skill, tool, industry term) and one status (missing, underrepresented).
 - **REQ-GEN-04** Drop any keyword not found in the job description (case-insensitive, after stemming). If fewer than 8 remain, re-request once (REQ-ERR-02).
 - **REQ-S1-02** The status is set by code, not by the model: "missing" if the keyword (stemmed) is not in the resume, otherwise "underrepresented".
+- **REQ-S1-04** If a listed keyword appears in the notes (same matching as REQ-S1-02), the report marks it "In notes". This is set by code and doesn't change the status. Notes are not sent to the AI in Step 1.
 - **REQ-GEN-05** Exactly 3 weak bullets, each quoted verbatim from the resume, each with a reason (generic, no measurable impact, passive phrasing) and one sentence of explanation.
 - **REQ-GEN-06** If the resume has fewer than 3 bullets, list all of them and state how many are missing.
 
@@ -71,4 +73,4 @@ IDs from `requirements.md` / `SECURITY_SPEC.md` are reused where the criterion i
 ## Known limits of this slice
 - Rate-limit and daily-cap counters are held in server memory. On Vercel they reset when an instance restarts and are not shared between instances, so they are best-effort only.
 - No upload sandbox (SEC-FILE-02) or malware scan (SEC-FILE-07). Files are parsed in memory and never stored or served back.
-- English only, no language check (REQ-IN-09). No additional-notes field (REQ-IN-08).
+- English only, no language check (REQ-IN-09).

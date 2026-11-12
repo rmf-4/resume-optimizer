@@ -1,10 +1,11 @@
-// Input limits from docs/STORY_1.md (REQ-IN-01, REQ-IN-03, REQ-IN-06, REQ-IN-07, REQ-S1-01).
+// Input limits from docs/STORY_1.md (REQ-IN-01, REQ-IN-03, REQ-IN-06, REQ-IN-07, REQ-IN-08, REQ-S1-01).
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 export const MAX_PAGES = 10;
 export const MIN_PDF_TEXT_CHARS = 200;
 export const MIN_JD_CHARS = 300;
 export const MAX_JD_CHARS = 20_000;
 export const MAX_RESUME_CHARS = 50_000;
+export const MAX_NOTES_CHARS = 10_000;
 
 // DOCX container limits (SEC-FILE-04).
 export const MAX_DOCX_EXPANDED_BYTES = 50 * 1024 * 1024;

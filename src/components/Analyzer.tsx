@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
-import { MAX_JD_CHARS, MAX_UPLOAD_BYTES, MIN_JD_CHARS } from "@/lib/limits";
+import { MAX_JD_CHARS, MAX_NOTES_CHARS, MAX_UPLOAD_BYTES, MIN_JD_CHARS } from "@/lib/limits";
 import type { Step1Report } from "@/lib/step1/types";
 import styles from "./Analyzer.module.css";
 
@@ -39,6 +39,7 @@ export default function Analyzer({ demoMode }: { demoMode: boolean }) {
   const [jdUploading, setJdUploading] = useState(false);
   const [jdUploadError, setJdUploadError] = useState<string | null>(null);
   const [jdHiddenText, setJdHiddenText] = useState<string[]>([]);
+  const [notes, setNotes] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [report, setReport] = useState<Step1Report | null>(null);
@@ -122,7 +123,7 @@ export default function Analyzer({ demoMode }: { demoMode: boolean }) {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ resumeText, jobDescription, confirmed: true }),
+        body: JSON.stringify({ resumeText, jobDescription, notes, confirmed: true }),
       });
       const body = await readJson(res);
       if (!res.ok || !body?.report) {
@@ -261,6 +262,25 @@ export default function Analyzer({ demoMode }: { demoMode: boolean }) {
         )}
       </section>
 
+      <section className={styles.card}>
+        <h2>4. Add notes (optional)</h2>
+        <label className={styles.label} htmlFor="notes">
+          Notes (optional)
+        </label>
+        <p className={styles.hint}>True details your resume leaves out, such as tools you&apos;ve used or results you can back up.</p>
+        <textarea
+          id="notes"
+          className={styles.textarea}
+          rows={5}
+          maxLength={MAX_NOTES_CHARS}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+        />
+        <p className={styles.hint}>
+          {notes.trim().length.toLocaleString("en-US")} / {MAX_NOTES_CHARS.toLocaleString("en-US")} characters
+        </p>
+      </section>
+
       <div className={styles.actions}>
         <button className={styles.button} type="button" onClick={onAnalyze} disabled={!canAnalyze}>
           Analyze resume
@@ -305,15 +325,21 @@ function Report({ report }: { report: Step1Report }) {
                 <td>{k.keyword}</td>
                 <td>{k.category}</td>
                 <td>
-                  <span className={k.status === "missing" ? styles.missing : styles.under}>
-                    {k.status === "missing" ? "Missing" : "Underrepresented"}
-                  </span>
+                  <div className={styles.tags}>
+                    <span className={k.status === "missing" ? styles.missing : styles.under}>
+                      {k.status === "missing" ? "Missing" : "Underrepresented"}
+                    </span>
+                    {k.inNotes && <span className={styles.inNotes}>In notes</span>}
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {report.keywords.some((k) => k.inNotes) && (
+        <p className={styles.hint}>&ldquo;In notes&rdquo; means your notes mention this keyword, so you may be able to add it to your resume.</p>
+      )}
       {report.droppedKeywords.length > 0 && (
         <p className={styles.hint}>
           {report.droppedKeywords.length} suggested keyword{report.droppedKeywords.length === 1 ? " was" : "s were"} left out because{" "}

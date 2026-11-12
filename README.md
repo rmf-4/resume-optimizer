@@ -1,6 +1,6 @@
 # Resume Keyword Check
 
-Upload a resume (PDF or Word), paste or upload a job description (PDF or Word), and get **Step 1: ATS & Keyword Gap Analysis**: the job's keywords your resume is missing, and your three weakest bullet points.
+Upload a resume (PDF or Word), paste or upload a job description (PDF or Word), and get **Step 1: ATS & Keyword Gap Analysis**: the job's keywords your resume is missing, and your three weakest bullet points. You can also add optional notes, and the report marks any keywords they mention.
 
 This is the first slice of the Resume & LinkedIn Optimizer. What it does and doesn't do is in [docs/STORY_1.md](docs/STORY_1.md). The full product spec is in [docs/](docs/).
 

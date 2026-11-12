@@ -144,6 +144,39 @@ describe("POST /api/analyze inputs", () => {
     expect((await res.json()).error.code).toBe("resume_too_long");
   });
 
+  it("test_additional_context_optional_and_capped_at_10000", async () => {
+    const handler = makeHandler();
+    expect((await handler(analyzeRequest(goodBody))).status).toBe(200);
+    expect((await handler(analyzeRequest({ ...goodBody, notes: "x".repeat(10000) }))).status).toBe(200);
+    // The cap applies after trimming, like the job description's.
+    expect((await handler(analyzeRequest({ ...goodBody, notes: "  " + "x".repeat(10000) + "  " }))).status).toBe(200);
+    const over = await handler(analyzeRequest({ ...goodBody, notes: "x".repeat(10001) }));
+    expect(over.status).toBe(422);
+    expect((await over.json()).error.code).toBe("notes_too_long");
+  });
+
+  it("test_notes_must_be_text", async () => {
+    const res = await makeHandler()(analyzeRequest({ ...goodBody, notes: 123 }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.code).toBe("bad_request");
+  });
+
+  it("test_keyword_in_notes_flagged_in_report", async () => {
+    const res = await makeHandler()(analyzeRequest({ ...goodBody, notes: "Built Tableau dashboards for the warehouse team." }));
+    const { report } = await res.json();
+    const find = (name: string) => report.keywords.find((k: { keyword: string }) => k.keyword === name);
+    expect(find("Tableau").inNotes).toBe(true);
+    expect(find("Tableau").status).toBe("missing"); // REQ-S1-02: the resume still doesn't show it.
+    expect(find("SQL").inNotes).toBe(false);
+  });
+
+  it("test_notes_not_sent_to_model_in_step1", async () => {
+    const { model, prompts } = capturingModel();
+    await makeHandler({ model })(analyzeRequest({ ...goodBody, notes: "NOTES-CANARY" }));
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]).not.toContain("NOTES-CANARY");
+  });
+
   it("test_llm_receives_only_confirmed_stripped_text", async () => {
     const { model, prompts } = capturingModel();
     await makeHandler({ model })(analyzeRequest({ ...goodBody, resumeText: RESUME_TEXT + "\nCOACH-EDITED-LINE" }));
@@ -200,7 +233,7 @@ describe("POST /api/analyze limits and failures", () => {
   it("test_logs_and_error_reports_contain_no_pii_or_secrets", async () => {
     const spies = (["log", "info", "warn", "error", "debug"] as const).map((m) => vi.spyOn(console, m).mockImplementation(() => {}));
     const canary = "CANARY-7f3a9 Jordan Lee";
-    const body = { ...goodBody, resumeText: RESUME_TEXT + "\n• " + canary, jobDescription: JOB_DESCRIPTION + "\n" + canary };
+    const body = { ...goodBody, resumeText: RESUME_TEXT + "\n• " + canary, jobDescription: JOB_DESCRIPTION + "\n" + canary, notes: canary };
     await makeHandler()(analyzeRequest(body));
     const failing: Step1Model = { mode: "ai", generate: async () => { throw new Error("boom " + canary); } };
     await makeHandler({ model: failing })(analyzeRequest(body));

@@ -33,7 +33,7 @@ export function validateStep1(raw: unknown, ctx: Step1Context): Validation {
   const out = parsed.data;
   const problems: string[] = [];
 
-  // Keywords: de-duplicate, drop anything not grounded in the JD (REQ-GEN-04), set status in code (REQ-S1-02).
+  // Keywords: de-duplicate, drop anything not grounded in the JD (REQ-GEN-04), set status and the notes flag in code (REQ-S1-02, REQ-S1-04).
   const seen = new Set<string>();
   const keywords: Step1Report["keywords"] = [];
   const droppedKeywords: string[] = [];
@@ -50,6 +50,7 @@ export function validateStep1(raw: unknown, ctx: Step1Context): Validation {
       keyword,
       category: k.category,
       status: containsPhrase(ctx.resumeText, keyword) ? "underrepresented" : "missing",
+      inNotes: containsPhrase(ctx.notes ?? "", keyword),
     });
   }
   if (keywords.length < MIN_KEYWORDS || keywords.length > MAX_KEYWORDS) {

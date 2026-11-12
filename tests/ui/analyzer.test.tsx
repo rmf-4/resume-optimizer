@@ -123,6 +123,50 @@ describe("Analyzer page", () => {
     expect((window as unknown as { __pwned?: number }).__pwned).toBeUndefined();
   });
 
+  it("test_notes_box_optional_capped_and_sent_with_analysis", async () => {
+    const fetchMock = mockFetch({ fileType: "pdf", text: RESUME_TEXT, hiddenText: [], pageCount: 1 });
+    const user = userEvent.setup();
+    render(<Analyzer demoMode={false} />);
+    await uploadFile(user);
+    await user.click(await screen.findByLabelText(/i've checked this text/i));
+    await user.click(screen.getByLabelText(/^job description/i));
+    await user.paste(JOB_DESCRIPTION);
+
+    const notes = screen.getByLabelText(/^notes/i) as HTMLTextAreaElement;
+    expect(notes.maxLength).toBe(10000);
+    const button = screen.getByRole("button", { name: /analyze resume/i }) as HTMLButtonElement;
+    expect(button.disabled).toBe(false); // Notes are optional.
+
+    const note = "Cut reconciliation time across 3 warehouses";
+    await user.click(notes);
+    await user.paste(note);
+    expect(screen.getByText(`${note.length} / 10,000 characters`)).toBeTruthy();
+
+    await user.click(button);
+    await screen.findByRole("heading", { name: "Step 1: ATS & Keyword Gap Analysis" });
+    const analyzeCall = fetchMock.mock.calls.find((c) => c[0] === "/api/analyze") as unknown as [string, RequestInit];
+    expect(JSON.parse(String(analyzeCall[1].body)).notes).toBe(note);
+  });
+
+  it("test_keyword_in_notes_tag_shown", async () => {
+    const keywords = [
+      { keyword: "Tableau", category: "tool", status: "missing", inNotes: true },
+      { keyword: "Excel", category: "tool", status: "underrepresented", inNotes: false },
+    ];
+    mockFetch({ fileType: "pdf", text: RESUME_TEXT, hiddenText: [], pageCount: 1 }, { report: { ...REPORT, keywords } });
+    const user = userEvent.setup();
+    render(<Analyzer demoMode={false} />);
+    await uploadFile(user);
+    await user.click(await screen.findByLabelText(/i've checked this text/i));
+    await user.click(screen.getByLabelText(/^job description/i));
+    await user.paste(JOB_DESCRIPTION);
+    await user.click(screen.getByRole("button", { name: /analyze resume/i }));
+    await screen.findByRole("heading", { name: "Step 1: ATS & Keyword Gap Analysis" });
+
+    expect(screen.getAllByText("In notes")).toHaveLength(1);
+    expect(screen.getByText("Tableau").closest("tr")?.textContent).toContain("In notes");
+  });
+
   it("test_demo_mode_banner_shown", async () => {
     mockFetch({});
     render(<Analyzer demoMode={true} />);

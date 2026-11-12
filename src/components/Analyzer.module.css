@@ -174,8 +174,15 @@
   font-weight: 600;
 }
 
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .missing,
-.under {
+.under,
+.inNotes {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
@@ -191,6 +198,11 @@
 .under {
   background: var(--warn-bg);
   color: var(--warn-fg);
+}
+
+.inNotes {
+  background: var(--note-bg);
+  color: var(--note-fg);
 }
 
 .bullets {

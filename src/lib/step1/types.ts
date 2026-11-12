@@ -9,7 +9,8 @@ export type KeywordCategory = (typeof KEYWORD_CATEGORIES)[number];
 export type WeakBulletReason = (typeof WEAK_BULLET_REASONS)[number];
 export type KeywordStatus = "missing" | "underrepresented";
 
-export type Step1Input = { resumeText: string; jobDescription: string };
+/** `notes` is only compared with the keywords in code (REQ-S1-04). It is never put in the Step 1 prompt. */
+export type Step1Input = { resumeText: string; jobDescription: string; notes?: string };
 export type Step1Context = Step1Input & { bullets: Bullet[] };
 
 export type Step1Prompt = { system: string; user: string };
@@ -31,7 +32,7 @@ export interface Step1Model {
 export type Step1Report = {
   header: typeof STEP1_HEADER;
   mode: "ai" | "demo";
-  keywords: { keyword: string; category: KeywordCategory; status: KeywordStatus }[];
+  keywords: { keyword: string; category: KeywordCategory; status: KeywordStatus; inNotes: boolean }[];
   droppedKeywords: string[];
   weakBullets: { quote: string; reason: WeakBulletReason; explanation: string }[];
   bulletsFound: number;

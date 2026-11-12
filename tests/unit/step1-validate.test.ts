@@ -35,6 +35,20 @@ function output(keywordCount: number, extra: object = {}) {
   };
 }
 
+describe("REQ-S1-04 keywords in the notes", () => {
+  it("test_keyword_in_notes_flagged_and_status_unchanged", () => {
+    const withNotes = validateStep1(output(10), { ...ctx, notes: "Built Tableau dashboards for the warehouse team." });
+    expect(withNotes.ok).toBe(true);
+    if (withNotes.ok) {
+      const tableau = withNotes.report.keywords.find((k) => k.keyword === "Tableau");
+      expect(tableau).toMatchObject({ status: "missing", inNotes: true });
+      expect(withNotes.report.keywords.find((k) => k.keyword === "SQL")?.inNotes).toBe(false);
+    }
+    const without = validateStep1(output(10), ctx);
+    if (without.ok) expect(without.report.keywords.every((k) => k.inNotes === false)).toBe(true);
+  });
+});
+
 describe("REQ-GEN-01 / REQ-GEN-03 keyword list", () => {
   it("test_report_has_step1_header", () => {
     const r = validateStep1(output(10), ctx);

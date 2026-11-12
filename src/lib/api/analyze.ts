@@ -2,6 +2,7 @@ import {
   ANALYSES_PER_HOUR_PER_VISITOR,
   DEFAULT_DAILY_ANALYSIS_CAP,
   MAX_JD_CHARS,
+  MAX_NOTES_CHARS,
   MAX_RESUME_CHARS,
   MIN_JD_CHARS,
 } from "@/lib/limits";
@@ -29,7 +30,7 @@ export function createAnalyzeHandler(deps: AnalyzeDeps) {
   return async function analyze(req: Request): Promise<Response> {
     if (!originAllowed(req)) return errorResponse(403, "forbidden", FORBIDDEN_MESSAGE);
 
-    let body: { resumeText?: unknown; jobDescription?: unknown; confirmed?: unknown };
+    let body: { resumeText?: unknown; jobDescription?: unknown; notes?: unknown; confirmed?: unknown };
     try {
       body = (await req.json()) ?? {};
     } catch {
@@ -40,11 +41,16 @@ export function createAnalyzeHandler(deps: AnalyzeDeps) {
     if (body.confirmed !== true) {
       return errorResponse(400, "not_confirmed", "Please check the extracted resume text and confirm it before analysing.");
     }
-    if (typeof body.resumeText !== "string" || typeof body.jobDescription !== "string") {
+    if (
+      typeof body.resumeText !== "string" ||
+      typeof body.jobDescription !== "string" ||
+      (body.notes !== undefined && typeof body.notes !== "string")
+    ) {
       return errorResponse(400, "bad_request", "The request could not be read.");
     }
     const resumeText = body.resumeText.trim();
     const jobDescription = body.jobDescription.trim();
+    const notes = typeof body.notes === "string" ? body.notes.trim() : "";
 
     if (!resumeText) return errorResponse(422, "resume_empty", "The resume text is empty.");
     if (resumeText.length > MAX_RESUME_CHARS) {
@@ -55,6 +61,9 @@ export function createAnalyzeHandler(deps: AnalyzeDeps) {
     }
     if (jobDescription.length > MAX_JD_CHARS) {
       return errorResponse(422, "jd_too_long", "The job description is longer than 20,000 characters. Please shorten it.");
+    }
+    if (notes.length > MAX_NOTES_CHARS) {
+      return errorResponse(422, "notes_too_long", "The notes are longer than 10,000 characters. Please shorten them.");
     }
 
     const hourly = deps.hourlyLimiter.take(clientIp(req));
@@ -71,7 +80,7 @@ export function createAnalyzeHandler(deps: AnalyzeDeps) {
     }
 
     try {
-      const outcome = await runStep1({ resumeText, jobDescription }, deps.model, deps.runOptions);
+      const outcome = await runStep1({ resumeText, jobDescription, notes }, deps.model, deps.runOptions);
       if (outcome.ok) return json({ report: outcome.report });
       return errorResponse(STEP1_ERROR_STATUS[outcome.error.code], outcome.error.code, outcome.error.message);
     } catch (e) {
