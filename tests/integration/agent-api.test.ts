@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { extractDocx } from "@/lib/extract/docx";
 import { simulatedModel } from "@/lib/agent/simulated";
 import { SAMPLE_NOTES, SAMPLE_POSTING, SAMPLE_RESUME } from "@/lib/agent/sample";
-import { createAgentExportHandler, createAgentRunHandler } from "@/lib/api/agent";
+import { createAgentExportHandler, createAgentRunHandler, createPostingLinkHandler } from "@/lib/api/agent";
 import { RateLimiter } from "@/lib/rateLimit";
 
 const HOUR = 60 * 60 * 1000;
@@ -13,6 +13,7 @@ function deps() {
     hourlyLimiter: new RateLimiter({ limit: 10, windowMs: HOUR }),
     dailyCap: new RateLimiter({ limit: 100, windowMs: HOUR }),
     exportLimiter: new RateLimiter({ limit: 60, windowMs: HOUR }),
+    linkLimiter: new RateLimiter({ limit: 40, windowMs: HOUR }),
   };
 }
 
@@ -82,5 +83,20 @@ describe("agent export API", () => {
     const body = await res.json();
     expect(body.error.code).toBe("export_blocked");
     expect(body.findings.map((f: { type: string }) => f.type)).toEqual(expect.arrayContaining(["new_number", "new_name"]));
+  });
+});
+
+describe("posting link API", () => {
+  it("test_link_handler_reads_supported_links_and_refuses_others", async () => {
+    const fetchFn = (async () =>
+      new Response(JSON.stringify({ title: "Data Analyst Intern", company_name: "Stripe", content: `<p>${"Requirements: SQL and Excel. ".repeat(10)}</p>` }))) as typeof fetch;
+    const handler = createPostingLinkHandler({ linkLimiter: new RateLimiter({ limit: 40, windowMs: HOUR }), fetchFn });
+    const ok = await handler(post("/api/agent/posting", { url: "https://boards.greenhouse.io/stripe/jobs/1" }));
+    expect(ok.status).toBe(200);
+    expect((await ok.json()).posting.text).toContain("Data Analyst Intern");
+    const no = await handler(post("/api/agent/posting", { url: "https://www.linkedin.com/jobs/view/1" }));
+    expect(no.status).toBe(422);
+    expect((await no.json()).error.code).toBe("unsupported_link");
+    expect((await handler(post("/api/agent/posting", { url: "https://boards.greenhouse.io/stripe/jobs/1" }, "https://evil.example"))).status).toBe(403);
   });
 });

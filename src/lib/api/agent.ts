@@ -2,6 +2,7 @@ import { anthropicAgentModel } from "@/lib/agent/anthropic";
 import { check } from "@/lib/agent/check";
 import { ExportError, exportDocx, exportPdf, TEMPLATES, type TemplateId } from "@/lib/agent/export";
 import { composeSource, runDecide, type AgentErrorCode, type RunOptions } from "@/lib/agent/run";
+import { fetchPosting } from "@/lib/agent/postingLinks";
 import { simulatedModel } from "@/lib/agent/simulated";
 import { runTailor } from "@/lib/agent/tailor";
 import type { AgentModel } from "@/lib/agent/types";
@@ -22,6 +23,7 @@ export type AgentDeps = {
   hourlyLimiter: RateLimiter;
   dailyCap: RateLimiter;
   exportLimiter: RateLimiter;
+  linkLimiter: RateLimiter;
   runOptions?: RunOptions;
 };
 
@@ -176,6 +178,27 @@ export function createAgentExportHandler(deps: Pick<AgentDeps, "exportLimiter">)
   };
 }
 
+const LINK_ERROR_STATUS = { unsupported_link: 422, posting_not_found: 404, fetch_failed: 502, posting_too_long: 422, posting_too_short: 422 } as const;
+
+/**
+ * POST /api/agent/posting: reads one posting from a supported job board's public API (REQ-AG-05, A-63).
+ * The link itself is never fetched; see postingLinks.ts.
+ */
+export function createPostingLinkHandler(deps: { linkLimiter: RateLimiter; fetchFn?: typeof fetch }) {
+  return async function postingLink(req: Request): Promise<Response> {
+    if (!originAllowed(req)) return errorResponse(403, "forbidden", FORBIDDEN_MESSAGE);
+    const body = await readBody(req);
+    if (!body || typeof body.url !== "string" || body.url.length > 500) return errorResponse(400, "bad_request", "Paste a link to a job posting.");
+    const limit = deps.linkLimiter.take(clientIp(req));
+    if (!limit.allowed) {
+      return errorResponse(429, "rate_limited", "Too many links in an hour. Paste the posting text instead, or try later.", { "retry-after": String(limit.retryAfterSeconds) });
+    }
+    const result = await fetchPosting(body.url, deps.fetchFn);
+    if (!result.ok) return errorResponse(LINK_ERROR_STATUS[result.code], result.code, result.message);
+    return json({ posting: result.posting });
+  };
+}
+
 /** Real AI when ANTHROPIC_API_KEY is set; otherwise the labelled simulated model (REQ-AG-40). */
 export function defaultAgentDeps(): AgentDeps {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -185,5 +208,6 @@ export function defaultAgentDeps(): AgentDeps {
     hourlyLimiter: new RateLimiter({ limit: ANALYSES_PER_HOUR_PER_VISITOR, windowMs: 60 * 60 * 1000 }),
     dailyCap: new RateLimiter({ limit: dailyLimit, windowMs: 24 * 60 * 60 * 1000 }),
     exportLimiter: new RateLimiter({ limit: 60, windowMs: 60 * 60 * 1000 }),
+    linkLimiter: new RateLimiter({ limit: 40, windowMs: 60 * 60 * 1000 }),
   };
 }

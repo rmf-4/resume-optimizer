@@ -12,7 +12,7 @@
 ## Inputs
 - **NG-06** OCR, scanned or image-only PDFs, and image files. ⚠️ A-05
 - **NG-07** File formats other than PDF and DOCX (DOC, RTF, Pages, ODT, TXT upload, Google Docs import). Pasting the resume is also out. ⚠️ A-04
-- **NG-08** **Fetching a job description from a URL**, or scraping job boards or LinkedIn profiles. This is excluded on purpose to remove the SSRF and scraping-ToS risk.
+- **NG-08** **Fetching a job description from a URL**, or scraping job boards or LinkedIn profiles. This is excluded on purpose to remove the SSRF and scraping-ToS risk. *Changed 2026-11-12 for agent runs:* a posting link from Greenhouse, Lever, Ashby or SmartRecruiters is read through that board's public posting API at an address the server builds itself (REQ-AG-05). Fetching arbitrary URLs and scraping LinkedIn, Indeed or any page are still out. ⚠️ A-63
 - **NG-09** Languages other than English. ⚠️ A-06
 
 ## Output & features
