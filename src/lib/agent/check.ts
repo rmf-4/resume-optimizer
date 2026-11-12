@@ -299,7 +299,7 @@ const SCOPE_FAMILIES: string[][] = [
 
 /** Words that grade the client instead of stating what they did. Allowed only if the original already uses them. */
 const SELF_PRAISE =
-  /\b(?:strong(?:ly)?|excellent|exceptional(?:ly)?|outstanding|proven|passionate|passion|highly|expert(?:ise)?|innovative|visionary|dynamic|motivated|self-driven|self-starter|results-driven|detail-oriented|talented|skilled|successfully|effectively|clearly|seamlessly|world-class|best-in-class|judg(?:e)?ment|adept|savvy|exemplary)\b/gi;
+  /\b(?:strong(?:ly)?|excellent|exceptional(?:ly)?|outstanding|proven|passionate|passion|highly|expert(?:ise)?|innovative|visionary|dynamic|motivated|self-driven|self-starter|results-driven|detail-oriented|talented|skilled|successfully|effectively|clearly|seamlessly|world-class|best-in-class|judg(?:e)?ment|adept|savvy|exemplary|communicator|team[- ]player|problem[- ]solver|hard[- ]?working|go-getter|quick learner|fast learner|people person|natural leader|thought leader|rock ?star|ninja|guru)\b/gi;
 
 // ---------- hidden text ----------
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type ChangeEvent, type ReactNode } from "react";
 import type { DecideResult } from "@/lib/agent/run";
+import { FACTS_PROMPT } from "@/lib/agent/factsPrompt";
 import { SAMPLE_NOTES, SAMPLE_POSTING, SAMPLE_RESUME } from "@/lib/agent/sample";
 import type { RevertType, TailorResult } from "@/lib/agent/tailor";
 import { MAX_JD_CHARS, MAX_NOTES_CHARS, MAX_UPLOAD_BYTES, MIN_JD_CHARS } from "@/lib/limits";
@@ -103,6 +104,17 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
   const [exportError, setExportError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [template, setTemplate] = useState<TemplateChoice>("classic");
+  const [promptCopied, setPromptCopied] = useState(false);
+
+  async function copyFactsPrompt() {
+    try {
+      await navigator.clipboard.writeText(FACTS_PROMPT);
+      setPromptCopied(true);
+      setTimeout(() => setPromptCopied(false), 2000);
+    } catch {
+      setPromptCopied(false);
+    }
+  }
 
   const postingLength = posting.trim().length;
   const postingValid = postingLength >= MIN_JD_CHARS && postingLength <= MAX_JD_CHARS;
@@ -355,6 +367,24 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
           placeholder="For example: used SQL for the 2022 audit; presented to the CFO twice"
         />
         <p className={base.hint}>The agent can use these in rewrites. Only add things that are true.</p>
+
+        <details className={styles.facts}>
+          <summary>Pull your projects from ChatGPT, Claude or another AI assistant</summary>
+          <p className={base.hint}>
+            An assistant that remembers your conversations often knows projects your resume leaves out. Copy this prompt into it,
+            then paste its answer into the notes above.
+          </p>
+          <textarea className={base.textarea} rows={8} readOnly value={FACTS_PROMPT} aria-label="Prompt to copy into your AI assistant" />
+          <div className={styles.row}>
+            <button type="button" className={styles.secondary} onClick={copyFactsPrompt}>
+              {promptCopied ? "Copied" : "Copy the prompt"}
+            </button>
+          </div>
+          <p className={`${base.warning} ${styles.factsWarning}`}>
+            Read every line before you paste it. The agent treats your notes as true, and assistants can misremember. Lines marked
+            [unsure], and everything under THINGS TO CONFIRM, are ignored until you fix them and remove the mark.
+          </p>
+        </details>
       </section>
 
       <section className={base.card}>
@@ -486,6 +516,13 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
         <section className={base.card}>
           <h2>Tailored resume</h2>
           {t.preparedAnyway && <p className={base.badge}>Prepared anyway</p>}
+          {t.angle && (
+            <>
+              <h3>The angle for this job</h3>
+              <p className={styles.angle}>{t.angle}</p>
+              <p className={base.hint}>What the rewrites aim to show. It isn&apos;t added to the resume.</p>
+            </>
+          )}
 
           {t.echo.total > 0 && (
             <>
@@ -565,6 +602,18 @@ export default function AgentRunner({ simulated }: { simulated: boolean }) {
                   </p>
                 </div>
               ))}
+            </>
+          )}
+
+          {t.questions.length > 0 && (
+            <>
+              <h3>Questions for the client</h3>
+              <p className={base.hint}>True answers make this resume stronger for this job. Add them to the notes and run again.</p>
+              <ol className={styles.reasons}>
+                {t.questions.map((q, i) => (
+                  <li key={i}>{q}</li>
+                ))}
+              </ol>
             </>
           )}
 

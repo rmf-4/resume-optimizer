@@ -173,3 +173,10 @@ describe("everyday verbs in every form", () => {
     }
   });
 });
+
+describe("trait labels", () => {
+  it("test_trait_labels_count_as_self_praise", () => {
+    expect(run("Presented supply chain findings to senior managers as a clear communicator", { baseline: "Presented supply chain findings to senior managers each quarter" }).map((f) => f.type)).toContain("self_praise");
+    expect(run("Built an Excel model as a team player", { baseline: "Built an Excel model" })).toContainEqual({ type: "self_praise", text: "team player" });
+  });
+});

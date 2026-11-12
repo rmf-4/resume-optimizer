@@ -178,3 +178,35 @@
   color: var(--warn-fg);
   font-size: 0.9rem;
 }
+
+.angle {
+  margin: 0 0 4px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent);
+  background: var(--bg);
+  font-style: italic;
+}
+
+.facts {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.facts summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.facts[open] summary {
+  margin-bottom: 8px;
+}
+
+.facts textarea {
+  margin-bottom: 10px;
+}
+
+.factsWarning {
+  margin-top: 10px;
+}

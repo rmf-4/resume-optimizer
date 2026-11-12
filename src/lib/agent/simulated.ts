@@ -95,13 +95,15 @@ export function simulateTailor(ctx: TailorContext): {
   rewrites: { bullet_id: number; text: string }[];
   lead_bullet_ids: number[];
   skill_line_orders: { line_id: number; order: number[] }[];
+  angle: string;
+  questions: string[];
 } {
   const rewrites: { bullet_id: number; text: string }[] = [];
   for (const b of ctx.bullets) {
     const hit = WEAK_OPENINGS.find(([re]) => re.test(b.text));
     if (hit) rewrites.push({ bullet_id: b.id, text: b.text.replace(hit[0], hit[1]) });
   }
-  return { rewrites, lead_bullet_ids: [], skill_line_orders: [] };
+  return { rewrites, lead_bullet_ids: [], skill_line_orders: [], angle: "Simulated run: weak openings replaced, nothing else changed.", questions: [] };
 }
 
 export const simulatedModel: AgentModel = {

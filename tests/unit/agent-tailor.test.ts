@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { check } from "@/lib/agent/check";
 import { runDecide, type DecideResult } from "@/lib/agent/run";
 import { simulatedModel } from "@/lib/agent/simulated";
-import { applyRewrites, assembleResume, bulletEntries, buildTailorPrompt, echoReport, findSkillLines, runTailor } from "@/lib/agent/tailor";
+import { applyRewrites, assembleResume, bulletEntries, buildTailorPrompt, echoReport, findSkillLines, isTrivialChange, matchTypography, runTailor } from "@/lib/agent/tailor";
 import { SAMPLE_RESUME } from "@/lib/agent/sample";
 import type { AgentModel } from "@/lib/agent/types";
 import type { ModelResult } from "@/lib/step1/types";
@@ -77,9 +77,9 @@ describe("REQ-AG-14 lead bullet per entry", () => {
       posting: JOB_DESCRIPTION,
       bullets: b,
       keywords: [],
-      raw: { rewrites: [{ bullet_id: 2, text: "Wrote weekly SQL queries for reports" }], lead_bullet_ids: [2] },
+      raw: { rewrites: [{ bullet_id: 2, text: "Automated weekly reports with SQL queries" }], lead_bullet_ids: [2] },
     });
-    expect(r.tailored.split("\n")[3]).toBe("• Wrote weekly SQL queries for reports");
+    expect(r.tailored.split("\n")[3]).toBe("• Automated weekly reports with SQL queries");
     expect(r.tailored.split("\n")[4]).toBe("• Built dashboards in Excel");
   });
 
@@ -159,7 +159,7 @@ describe("posting words tied to evidence", () => {
   });
 
   it("test_first_person_rewrite_thrown_out", () => {
-    const r = applyRewrites({ ...base, gaps: [], met, raw: { rewrites: [{ bullet_id: 5, text: "Presented my supply chain findings to senior managers each quarter" }] } });
+    const r = applyRewrites({ ...base, gaps: [], met, raw: { rewrites: [{ bullet_id: 5, text: "Shared my supply chain findings with senior managers each quarter" }] } });
     expect(r.reverted[0].reasons).toContainEqual({ type: "first_person", text: "my" });
   });
 });
@@ -334,5 +334,20 @@ describe("REQ-AG-13 tailor run", () => {
     if (!out.ok) return;
     expect(out.result.mode).toBe("simulated");
     expect(check({ candidate: out.result.tailored, source: `${RESUME_TEXT}\n\nCoach notes:\n${input.notes}`, posting: JOB_DESCRIPTION })).toEqual([]);
+  });
+});
+
+describe("rewrite quality filters", () => {
+  it("test_cosmetic_rewrites_are_dropped", () => {
+    const original = "Designed and deployed Beacon, an autonomous trading system, and retired the strategy rather than deploying capital into a degrading edge.";
+    expect(isTrivialChange(original, "Designed and deployed Beacon, an autonomous trading system and retired the strategy instead of deploying capital into a degrading edge.", [])).toBe(true);
+    // Adding a posting keyword is never trivial.
+    expect(isTrivialChange("Analyzed sales trends on eBay", "Applied data analysis to sales trends on eBay", ["data analysis"])).toBe(false);
+    // A real reframe is kept.
+    expect(isTrivialChange(original, "Retired Beacon, an autonomous trading system, after live performance attribution showed alpha decay from signal crowding.", [])).toBe(false);
+  });
+
+  it("test_rewrites_keep_typographic_apostrophes", () => {
+    expect(matchTypography("Lead Tepper’s required sequence", "Lead Tepper's required sequence for guests' days")).toBe("Lead Tepper’s required sequence for guests' days");
   });
 });

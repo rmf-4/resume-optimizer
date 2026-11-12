@@ -1,32 +1,39 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { AI_MAX_OUTPUT_TOKENS } from "@/lib/limits";
 import { MODEL_ID } from "@/lib/step1/anthropic";
 import type { ModelResult } from "@/lib/step1/types";
-import { AGENT_AI_TIMEOUT_MS } from "./config";
+import { AGENT_AI_TIMEOUT_MS, TAILOR_MAX_OUTPUT_TOKENS } from "./config";
 import { DecideOutputSchema } from "./decide";
 import { TailorOutputSchema } from "./tailor";
 import type { AgentModel, AgentPrompt } from "./types";
 
 /**
  * The decide-step request. No tools, no retrieval, only this posting and these source facts (SEC-AG-05),
- * output capped (SEC-LLM-09). Same model and effort as Step 1 (A-56). Refusal fallbacks are on.
+ * output capped (SEC-LLM-09). High effort: the team chose quality over cost for both agent steps (A-56 changed
+ * 2026-11-12), which also aims to cut run-to-run variance in the decision. Refusal fallbacks are on.
  */
 export function buildDecideRequest(prompt: AgentPrompt) {
   return {
     model: MODEL_ID,
-    max_tokens: AI_MAX_OUTPUT_TOKENS,
+    max_tokens: TAILOR_MAX_OUTPUT_TOKENS,
     system: prompt.system,
     messages: [{ role: "user" as const, content: prompt.user }],
-    output_config: { effort: "low" as const, format: betaZodOutputFormat(DecideOutputSchema) },
+    output_config: { effort: "high" as const, format: betaZodOutputFormat(DecideOutputSchema) },
     fallbacks: "default" as const,
     betas: ["server-side-fallback-2026-07-01"],
   };
 }
 
-/** The tailor-step request: same rules as the decide step (SEC-AG-05), with the rewrite schema. */
+/**
+ * The tailor-step request: same rules as the decide step (SEC-AG-05), with the rewrite schema. Writing is the
+ * product here, so it runs at high effort with room for the model's thinking (A-56 changed for this step).
+ */
 export function buildTailorRequest(prompt: AgentPrompt) {
-  return { ...buildDecideRequest(prompt), output_config: { effort: "low" as const, format: betaZodOutputFormat(TailorOutputSchema) } };
+  return {
+    ...buildDecideRequest(prompt),
+    max_tokens: TAILOR_MAX_OUTPUT_TOKENS,
+    output_config: { effort: "high" as const, format: betaZodOutputFormat(TailorOutputSchema) },
+  };
 }
 
 /** Calls Claude with the server's key. Retries and timeouts are handled by the caller (REQ-AG-21, REQ-AG-38). */

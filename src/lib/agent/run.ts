@@ -1,6 +1,7 @@
 import type { ModelResult } from "@/lib/step1/types";
 import { AGENT_AI_TIMEOUT_MS } from "./config";
 import { decide, validateDecide, type DecisionSummary, type Requirement } from "./decide";
+import { trustedNotes } from "./factsPrompt";
 import { buildDecidePrompt } from "./prompt";
 import { redactContacts } from "./redact";
 import type { AgentModel, AgentPrompt, DecideContext } from "./types";
@@ -34,9 +35,10 @@ const MESSAGES = {
 
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/** Source facts as the model sees them: resume, then the coach's notes. */
+/** Source facts as the model sees them: resume, then the coach's notes, minus anything marked unsure (REQ-AG-45). */
 export function composeSource(resume: string, notes?: string): string {
-  return notes && notes.trim() ? `${resume}\n\nCoach notes:\n${notes.trim()}` : resume;
+  const trusted = trustedNotes(notes ?? "");
+  return trusted ? `${resume}\n\nCoach notes:\n${trusted}` : resume;
 }
 
 async function withTimeout(call: (signal: AbortSignal) => Promise<ModelResult>, timeoutMs: number): Promise<ModelResult> {

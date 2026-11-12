@@ -99,3 +99,19 @@ describe("REQ-AG-44 metadata", () => {
     expect(await exportPdf(SAMPLE_RESUME, template)).toEqual(pdfBytes);
   });
 });
+
+describe("typesetting", () => {
+  it("test_wrapped_text_never_ends_with_a_stranded_word", async () => {
+    const { StandardFonts } = await import("pdf-lib");
+    const doc = await PDFDocument.create();
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    const text = "Built an Excel acquisition model for small business deals and ranked the targets on risk";
+    // Width chosen so a greedy wrap leaves "risk" alone on the last line.
+    const firstLine = "Built an Excel acquisition model for small business deals and ranked the targets on";
+    const maxWidth = font.widthOfTextAtSize(firstLine, 10) + 1;
+    const lines = (await import("@/lib/agent/export")).wrapText(text, font, 10, maxWidth);
+    expect(lines.length).toBe(2);
+    expect(lines[1].trim().split(/\s+/).length).toBeGreaterThanOrEqual(2);
+    expect(lines.join(" ").replace(/\s+/g, " ")).toBe(text);
+  });
+});

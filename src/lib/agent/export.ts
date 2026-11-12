@@ -234,7 +234,65 @@ function wrapSegs(segs: Seg[], size: number, maxWidth: number): Seg[][] {
     push(word, line.length > 0 && word.space);
   }
   if (line.length) lines.push(line);
+  return fixWidow(lines, size, maxWidth);
+}
+
+/** Words on a wrapped line. */
+function wordCount(line: Seg[]): number {
+  return line.map((s) => s.text).join("").trim().split(/\s+/).filter(Boolean).length;
+}
+
+/**
+ * Typesetting rule: a wrapped paragraph never ends with one stranded word or a sliver of a line. Words move down
+ * from the line above until the last line holds at least two words and a fifth of the width, as long as the
+ * line above keeps at least two words of its own.
+ */
+function fixWidow(lines: Seg[][], size: number, maxWidth: number): Seg[][] {
+  const lineWidth = (l: Seg[]) => l.reduce((w, s) => w + segWidth(s, size), 0);
+  for (let pass = 0; pass < 3 && lines.length >= 2; pass++) {
+    const last = lines[lines.length - 1];
+    const prev = lines[lines.length - 2];
+    if (wordCount(last) >= 2 && lineWidth(last) >= maxWidth * 0.2) break;
+    if (wordCount(prev) <= 2) break;
+    const tail = prev[prev.length - 1];
+    const cut = tail.text.lastIndexOf(" ");
+    const word = cut >= 0 ? tail.text.slice(cut + 1) : tail.text;
+    if (cut > 0) prev[prev.length - 1] = { ...tail, text: tail.text.slice(0, cut) };
+    else prev.pop();
+    if (last[0].font === tail.font) last[0] = { ...last[0], text: `${word} ${last[0].text}` };
+    else {
+      last[0] = { ...last[0], text: ` ${last[0].text}` };
+      last.unshift({ text: word, font: tail.font });
+    }
+    if (lineWidth(last) > maxWidth) {
+      // Moving the word made the last line overflow: undo and stop.
+      lines.splice(lines.length - 2, 2, ...wrapPlain(prev, last, size, maxWidth));
+      break;
+    }
+  }
   return lines;
+}
+
+/** Fallback when a widow move overflows: re-join the two lines and split greedily again. */
+function wrapPlain(a: Seg[], b: Seg[], size: number, maxWidth: number): Seg[][] {
+  const text = [...a, ...b].map((s) => s.text).join("").replace(/\s+/g, " ").trim();
+  const font = a[0]?.font ?? b[0].font;
+  const out: Seg[][] = [];
+  let line = "";
+  for (const w of text.split(" ")) {
+    const next = line ? `${line} ${w}` : w;
+    if (line && font.widthOfTextAtSize(next, size) > maxWidth) {
+      out.push([{ text: line, font }]);
+      line = w;
+    } else line = next;
+  }
+  if (line) out.push([{ text: line, font }]);
+  return out;
+}
+
+/** Wraps plain text in one font. Exposed for tests of the typesetting rules. */
+export function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+  return wrapSegs([{ text, font }], size, maxWidth).map((l) => l.map((s) => s.text).join(""));
 }
 
 function layout(blocks: Block[], style: Style, fonts: Fonts, scale: number): Layout {
