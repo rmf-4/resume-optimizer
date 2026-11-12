@@ -35,6 +35,15 @@ describe("SEC-AG-03 injection and invisible text", () => {
     expect(invisible.find((w) => w.input === "resume")?.quote).toContain("U+200B");
   });
 
+  it("test_chat_apps_in_notes_or_skills_are_not_scams", () => {
+    const notes = "WHAT I DID: Set up Claude Code on the PC, run through Telegram bots with separate research, assistant and build roles";
+    expect(scanInputs({ posting: JOB_DESCRIPTION, resume: RESUME_TEXT, notes }).warnings).toEqual([]);
+    const posting = `${JOB_DESCRIPTION}\nExperience building Telegram or WhatsApp bots is a plus.`;
+    expect(scanInputs({ posting, resume: RESUME_TEXT }).warnings).toEqual([]);
+    // Scam patterns in the resume aren't about the employer, so they don't warn either.
+    expect(scanInputs({ posting: JOB_DESCRIPTION, resume: `${RESUME_TEXT}\n• Processed gift cards and wire transfers at the front desk` }).warnings).toEqual([]);
+  });
+
   it("test_ordinary_inputs_raise_no_warning", () => {
     const posting = `${JOB_DESCRIPTION}\nWe offer competitive pay, a paid training program and social media budget. You will lead a small team. A background check is required.`;
     expect(scanInputs({ posting, resume: RESUME_TEXT, notes: "Jordan led the March audit." }).warnings).toEqual([]);

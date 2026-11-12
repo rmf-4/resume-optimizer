@@ -28,7 +28,8 @@ const SCAM: RegExp[] = [
   /\b(?:upfront|up-front|registration|training|application|processing|equipment|onboarding|starter kit)\s+fees?\b/i,
   /\bgift cards?\b|\bwire transfer\b|\bwestern union\b|\bmoneygram\b|\bzelle\b|\bcrypto(?:currency)?\b|\bbitcoin\b/i,
   /\bcheck\b[^.\n]{0,30}\bdeposit\b|\bdeposit\b[^.\n]{0,30}\bcheck\b/i,
-  /\btelegram\b|\bwhatsapp\b|\bsignal app\b/i,
+  // Being asked to move the conversation to a chat app, not mentioning one ("built Telegram bots" is fine).
+  /\b(?:contact|message|text|reach|chat|interview|apply|talk|speak|connect|add)\b[^.\n]{0,40}\b(?:on|via|through|using|over)\s+(?:telegram|whatsapp|signal|wechat)\b/i,
 ];
 
 const MAX_QUOTE = 200;
@@ -72,7 +73,10 @@ export function scanInputs(inputs: AgentInputs): { warnings: InputWarning[]; cle
       push({ kind: "invisible_text", input: name, quote: showInvisible(snippet).trim() });
     }
     const cleaned = text.replace(INVISIBLE, "");
-    for (const [kind, list] of [["injection", INJECTION], ["scam", SCAM]] as const) {
+    // Scam signals are about the employer, so only the posting is checked for them (SEC-AG-04). Injection and
+    // invisible text can hide in any input (SEC-AG-03).
+    const checks = name === "posting" ? ([["injection", INJECTION], ["scam", SCAM]] as const) : ([["injection", INJECTION]] as const);
+    for (const [kind, list] of checks) {
       for (const re of list) {
         const m = re.exec(cleaned);
         if (m) push({ kind, input: name, quote: quoteAround(cleaned, m.index, m[0].length) });

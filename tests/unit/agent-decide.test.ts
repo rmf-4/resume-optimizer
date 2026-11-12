@@ -91,6 +91,24 @@ describe("REQ-AG-10 / REQ-AG-11 forced hand-offs", () => {
     expect(warned.reasons.join(" ")).toContain("ignore previous instructions");
   });
 
+  it("test_mostly_preferred_posting_counts_preferred_requirements", () => {
+    // The bookkeeping case: one must-have (a degree) and several preferred requirements, none with evidence.
+    const requirements = [
+      req("Associates Degree in accounting, finance, or related field required", { kind: "credential" }),
+      req("Bachelor's degree preferred", { kind: "credential", priority: "nice" }),
+      req("Minimum of two (2) years of experience within the accounting industry preferred", { priority: "nice" }),
+      req("Experience with QuickBooks Online or similar accounting software preferred", { priority: "nice" }),
+    ];
+    const r = decide({ requirements, warnings: [] });
+    expect(r.decision).toBe("skip");
+    expect(r.mustHaves).toBe(4);
+    expect(r.reasons[0]).toMatch(/only 1 must-have requirement, so its preferred requirements count too/i);
+
+    // Few musts but enough preferred evidence: decided on the widened set.
+    const strong = decide({ requirements: [...musts(1, 1), ...musts(3, 3).map((x) => ({ ...x, quote: `pref ${x.quote}`, priority: "nice" as const }))], warnings: [] });
+    expect(strong.decision).toBe("apply");
+  });
+
   it("test_missing_credential_blocks_apply", () => {
     const withCredential = [...musts(8, 9), req("CPA license", { kind: "credential" })];
     const r = decide({ requirements: withCredential, warnings: [] });

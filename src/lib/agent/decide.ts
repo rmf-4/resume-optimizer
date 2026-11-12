@@ -116,16 +116,25 @@ export type DecisionSummary = {
 
 /** Sets the decision in code (REQ-AG-09, REQ-AG-10, REQ-AG-11). */
 export function decide({ requirements, warnings }: { requirements: Requirement[]; warnings: InputWarning[] }): DecisionSummary {
-  const checkable = requirements.filter((r) => r.priority === "must" && r.kind !== "person");
+  const nonPerson = requirements.filter((r) => r.kind !== "person");
+  const musts = nonPerson.filter((r) => r.priority === "must");
+  // A posting that marks most requirements "preferred" would otherwise always go to a human. When it has fewer
+  // than the minimum must-haves, its preferred requirements count too (A-44, changed 2026-11-12).
+  const widened = musts.length < MIN_MUST_HAVES && nonPerson.length > musts.length;
+  const checkable = widened ? nonPerson : musts;
   const supported = checkable.filter((r) => r.evidence.length > 0);
   const coverage = checkable.length > 0 ? supported.length / checkable.length : null;
   const gaps = checkable.filter((r) => r.evidence.length === 0).map((r) => r.quote);
   const personOnly = requirements.filter((r) => r.kind === "person").map((r) => r.quote);
-  const missingCredentials = checkable.filter((r) => r.kind === "credential" && r.evidence.length === 0);
+  const missingCredentials = musts.filter((r) => r.kind === "credential" && r.evidence.length === 0);
+  const label = widened ? "requirements (must-have and preferred)" : "must-have requirements";
 
   const reasons: string[] = [];
+  if (widened) {
+    reasons.push(`The posting lists only ${musts.length} must-have requirement${musts.length === 1 ? "" : "s"}, so its preferred requirements count too.`);
+  }
   if (coverage !== null) {
-    reasons.push(`${supported.length} of ${checkable.length} must-have requirements have evidence in the source facts (${Math.round(coverage * 100)}%).`);
+    reasons.push(`${supported.length} of ${checkable.length} ${label} have evidence in the source facts (${Math.round(coverage * 100)}%).`);
   }
 
   let decision: Decision;
@@ -134,7 +143,7 @@ export function decide({ requirements, warnings }: { requirements: Requirement[]
     for (const w of warnings) reasons.push(`Warning (${w.kind.replace("_", " ")} in the ${w.input}): "${w.quote}"`);
   } else if (checkable.length < MIN_MUST_HAVES) {
     decision = "needs_human";
-    reasons.push(`Only ${checkable.length} must-have requirement${checkable.length === 1 ? "" : "s"} could be checked, fewer than ${MIN_MUST_HAVES}.`);
+    reasons.push(`Only ${checkable.length} requirement${checkable.length === 1 ? "" : "s"} could be checked, fewer than ${MIN_MUST_HAVES}.`);
   } else if (coverage! < SKIP_BELOW) {
     decision = "skip";
     reasons.push(`Below the ${Math.round(SKIP_BELOW * 100)}% skip line.`);
