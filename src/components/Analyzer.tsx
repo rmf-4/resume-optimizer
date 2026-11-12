@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type ChangeEvent } from "react";
 import { MAX_JD_CHARS, MAX_NOTES_CHARS, MAX_UPLOAD_BYTES, MIN_JD_CHARS } from "@/lib/limits";
 import type { Step1Report } from "@/lib/step1/types";
@@ -140,6 +141,9 @@ export default function Analyzer({ demoMode }: { demoMode: boolean }) {
 
   return (
     <main className={styles.main}>
+      <p className={styles.nav}>
+        New: <Link href="/agent">try the Application Prep Agent →</Link>
+      </p>
       <header className={styles.header}>
         <h1>Resume Keyword Check</h1>
         <p className={styles.lead}>

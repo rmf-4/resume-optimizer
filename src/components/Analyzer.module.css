@@ -4,6 +4,15 @@
   padding: 40px 16px 80px;
 }
 
+.nav {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+}
+
+.nav a {
+  color: var(--accent);
+}
+
 .header h1 {
   margin: 0 0 8px;
   font-size: 1.9rem;
