@@ -237,7 +237,8 @@ These are expected, and they belong in the report.
 
 - **The checker catches patterns, not meaning.** It misses inflation outside its verb list ("contributed to" becoming "drove"), lowercase skills the posting doesn't mention, and a true number attached to the wrong claim ("increased sales 20%" when the source says traffic).
 - **Word matching is loose.** "Managed" and "manager" share a stem, so a title can slip through.
-- **It also raises false alarms.** "$1.2M" and "$1,200,000" look different to it. The bullet reverts, which is safe but loses a good rewrite.
+- **It also raises false alarms.** Numbers are compared by value, so "$1.2M" matches "$1,200,000" and "six" matches "6". But any posting word the source doesn't use counts as `new_skill`, so a fair synonym taken from the posting ("dashboards" for "reports") reverts the bullet. That's safe but loses a good rewrite. Inflected forms the stemmer doesn't join ("built" and "build") add to this.
+- **Some numbers aren't counted.** "One", ordinals ("first") and multipliers in words ("doubled") aren't treated as numbers, so a rewrite that adds them passes.
 - **Coverage depends on the model.** Evidence can be verbatim but irrelevant, and the model chooses what counts as a must-have.
 - **Injection that adds no facts passes the checker.** "Enthusiastic self-starter" would get through. At level 2, a person sees it highlighted. At level 3, only the pattern warnings stand in the way, and rewording can evade those.
 - **The mock site isn't the real world.** Results say nothing about real application forms, real recruiters or callback rates.
